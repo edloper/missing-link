@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Missing Link</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="style.css"> 
+  <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+  <script src="javascript/string_to_png.js"></script>
+  <script src="javascript/svg_to_png.js"></script>
+  <script src="javascript/toggle.js"></script>
+  <script src="javascript/shapes.js"></script>
+  <script src="javascript/color.js"></script>
+  <script src="javascript/graph.js"></script>
+  <script src="javascript/mouse_handler.js"></script>
+  <script src="javascript/game.js"></script>
+  <script src="javascript/confetti.js"></script>
+  <script src="javascript/level_picker.js"></script>
+  <script src="javascript/colorpicker.js"></script>
+  <script src="javascript/level_urls.js"></script>
+  <script>
+    const MIN_WIDTH = 500;
+    const MAX_WIDTH = Math.min(1000, window.innerHeight - 250);
+    var game;
+
+    $(function() {
+	var levelPickerContainer = document.getElementById('levelPicker');
+	var gameContainer = document.getElementById('game');
+	
+	// Adjust size.  Keep hight=width to preserve the aspect ratio of the game.
+	var naturalWidth = levelPickerContainer.offsetWidth - 50;
+	console.log("natural width", naturalWidth);
+	var width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, naturalWidth));
+	var height = width;
+
+	game = new Game(gameContainer, width, height);
+	const levelPicker = new LevelPicker(levelPickerContainer, game, LEVEL_URLS);
+    });
+  </script>
+</head>
+<body>
+  <img src="images/titles/title2.jpg" class="missingLinkTitle">
+  <!--<h1>Missing Link</h1>-->
+  <div id="levelPicker"></div>
+  <div id="game" style="display: none"></div>
+</body>
+</html>
+
+
