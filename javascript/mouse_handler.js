@@ -28,8 +28,9 @@ class MouseHandler {
     touchStart(e, obj=null) {
 	e.preventDefault();
 	e.stopPropagation();
+	
 	if (e.touches.length == 1) {
-	    const touch = e.targetTouches[0];
+	    const touch = e.touches[0];
 	    this.startClick(touch.clientX, touch.clientY, obj);
 	} else if (e.touches.length == 2) {
 	    if (!this.isDragging) {
@@ -41,7 +42,7 @@ class MouseHandler {
     }
 
     touchMove(e) {
-	if (this.pinchPoint) {
+	if (this.pinchTouches) {
 	    this.pinchMove(e.touches);
 	} else if (this.clickStart) {
 	    const touch = e.targetTouches[0];
@@ -85,14 +86,20 @@ class MouseHandler {
     }
 
     pinchMove(touches) {
-	const points = touches.map(touch => this.game.draw.point(touch.eventX, touch.eventY));
+	if (touches.length != 2) {
+	    this.pinchTouches = null;
+	    return;
+	}
+	const points = [
+	    this.game.draw.point(touches[0].eventX, touches[0].eventY),
+	    this.game.draw.point(touches[1].eventX, touches[1].eventY)];
 	const distance = Math.hypot(touches[0].pageX - touches[1].pageX,
 				    touches[0].pageY - touches[1].pageY);
 	const zoomFactor = distance / this.lastPinchDistance;
 	const centerPoint = {x: (points[0].x + points[1].x)/2,
 			     y: (points[0].y + points[1].y)/2}
-	zoom(centerPoint, zoomFactor);
-	this.lastPinchDistance = dist;
+	this.zoom(centerPoint, zoomFactor);
+	this.lastPinchDistance = distance;
     }
     
     startClick(x, y, obj=null) {
@@ -190,7 +197,7 @@ class MouseHandler {
 	e.preventDefault(); // Don't scroll page.
         const point = this.game.draw.point(e.clientX, e.clientY);
 	var zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
-	zoom(point, zoomFactor);
+	this.zoom(point, zoomFactor);
     }
 
     zoom(point, zoomFactor) {
