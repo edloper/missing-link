@@ -5,7 +5,9 @@ class MouseHandler {
     constructor(game) {
 	this.game = game
 	this.clickStart = null;  // When did the user start clicking
+	this.clickPoint = null;  // Where did they start clicking?
 	this.clickObj = null;    // What did the user click on?
+	this.pinchTouches = null;  // Touches that started the pinch
 	this.isDragging = false;
 	this.zoomLevel = 1;
 	this.viewOffset = {x: 0, y: 0};
@@ -24,25 +26,38 @@ class MouseHandler {
     }
 
     touchStart(e, obj=null) {
-	const touch = e.targetTouches[0];
 	e.preventDefault();
 	e.stopPropagation();
-	this.startClick(touch.clientX, touch.clientY, obj);
+	if (e.touches.length == 1) {
+	    const touch = e.targetTouches[0];
+	    this.startClick(touch.clientX, touch.clientY, obj);
+	} else if (e.touches.length == 2) {
+	    if (!this.isDragging) {
+		this.pinchStart(e.touches);
+	    } else {
+		console.log("Multitouch after drag -- ignoring");
+	    }
+	}
     }
 
     touchMove(e) {
-	if (this.clickStart === null) { return; }
-	//e.preventDefault();  //  (inside passive event listener?)
-	const touch = e.targetTouches[0];
-	this.move(touch.clientX, touch.clientY);
+	if (this.pinchPoint) {
+	    this.pinchMove(e.touches);
+	} else if (this.clickStart) {
+	    const touch = e.targetTouches[0];
+	    this.move(touch.clientX, touch.clientY);
+	}
     }
 
     touchEnd(e) {
-	console.log(e)
-	if (this.clickStart === null) { return; }
-	e.preventDefault();
-	const touch = e.changedTouches[0];
-	this.endClick(touch.clientX, touch.clientY);
+	if (this.pinchTouches) {
+	    e.preventDefault();
+    	    this.pinchTouches = null;
+	} else if (this.clickStart) {
+	    e.preventDefault();
+	    const touch = e.changedTouches[0];
+	    this.endClick(touch.clientX, touch.clientY);
+	}
     }
 
     mouseDown(e, obj=null) {
@@ -60,6 +75,24 @@ class MouseHandler {
     mouseUp(e) {
 	e.preventDefault();
 	this.endClick(e.clientX, e.clientY, e.button);
+    }
+
+    pinchStart(touches) {
+	const distance = Math.hypot(touches[0].pageX - touches[1].pageX,
+				    touches[0].pageY - touches[1].pageY);
+	this.pinchTouches = touches;
+	this.lastPinchDistance = distance;
+    }
+
+    pinchMove(touches) {
+	const points = touches.map(touch => this.game.draw.point(touch.eventX, touch.eventY));
+	const distance = Math.hypot(touches[0].pageX - touches[1].pageX,
+				    touches[0].pageY - touches[1].pageY);
+	const zoomFactor = distance / this.lastPinchDistance;
+	const centerPoint = {x: (points[0].x + points[1].x)/2,
+			     y: (points[0].y + points[1].y)/2}
+	zoom(centerPoint, zoomFactor);
+	this.lastPinchDistance = dist;
     }
     
     startClick(x, y, obj=null) {
@@ -156,8 +189,11 @@ class MouseHandler {
     mouseWheel(e) {
 	e.preventDefault(); // Don't scroll page.
         const point = this.game.draw.point(e.clientX, e.clientY);
-	
 	var zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+	zoom(point, zoomFactor);
+    }
+
+    zoom(point, zoomFactor) {
 	// Don't zoom out past 100%.
 	if ((this.zoomLevel * zoomFactor) <= 1) {
 	    zoomFactor = 1/this.zoomLevel;
