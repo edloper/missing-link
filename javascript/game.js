@@ -181,10 +181,14 @@ class Game {
 	    (x, y) => {
 		const dot = this.graph.addDot(x, y);
 		dot.circle.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
-		dot.text.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot);
-						  e.stopPropagation(); });
-		dot.circle.on('mouseup', (e) => { this.mouseUpOnDot(dot); })
-		dot.text.on('mouseup', (e) => { this.mouseUpOnDot(dot); });
+		dot.text.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
+		//dot.circle.on('mouseup', (e) => { this.mouseUpOnDot(dot); })
+		//dot.text.on('mouseup', (e) => { this.mouseUpOnDot(dot); });
+		// Touch support.
+		dot.circle.on('touchstart', (e) => { this.mouseHandler.mouseDown(e, dot); });
+		dot.text.on('touchstart', (e) => { this.mouseHandler.mouseDown(e, dot); });
+		//dot.circle.on('touchend', (e) => { this.mouseUpOnDot(dot); })
+		//dot.text.on('touchend', (e) => { this.mouseUpOnDot(dot); });
 		return dot;
 	    },
 	    (corners, color) => {
@@ -296,8 +300,9 @@ class Game {
     addEdge(start, end = null, saveProgress=true) {
 	var edge = this.graph.addEdge(start, end);
 	this.activeEdge = edge;
-	edge.line.on('mousedown', (e) => {
-	    this.mouseHandler.mouseDown(e, edge); });
+	edge.line.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, edge); });
+	console.log("MouseDown on shadow!");
+	edge.shadow.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, edge); });
 	if (end) {
 	    this.revealTrianglesForEdge(edge);
 	    edge.showIsCorrect(this.easyMode, this.isCorrectEdge(edge));
@@ -319,32 +324,37 @@ class Game {
 	this.removeEdge(edge);
     }
 
-    startDragDot(dot) {
+    startDragDot(dot, x, y) {
 	if (dot.numEdgesLeft() == 0) {
 	    return;  // No room for new edges.
 	}
 	this.activeEdge = this.addEdge(dot);
     }
 
-    dragDot(dot, e) {
+    dragDot(dot, x, y) {
 	if (!this.activeEdge) {
 	    return;
 	}
-        const point = this.draw.point(e.clientX, e.clientY);
+        const point = this.draw.point(x, y);
 	this.activeEdge.drawTo(point.x, point.y);
     }
 
     mouseUpOnDot(dot) {
+	console.log("Mouse up on", dot);
 	if (!this.activeEdge) {
+	    console.log("A");
 	    return;
 	}
 	if (dot === this.activeEdge.start) {
+	    console.log("B");
 	    return;  // Don't connect a dot to itself.
 	}
 	if (this.dotsAreConnectedByEdge(this.activeEdge.start, dot)) {
+	    console.log("C");
 	    return;  // Already connected.
 	}
 	if (dot.numEdgesLeft() == 0) {
+	    console.log("D");
 	    return;  // No room for new edges.
 	}
 
@@ -357,10 +367,15 @@ class Game {
 	this.activeEdge = null;
     }
 
-    endDragDot(dot) {
+    endDragDot(dot, x, y) {
 	if (this.activeEdge) {
-	    this.graph.removeEdge(this.activeEdge);
-	    this.activeEdge = null;
+	    dot = this.graph.closestDotTo(x, y)
+	    if (dot) {
+		this.mouseUpOnDot(dot);
+	    } else {
+		this.graph.removeEdge(this.activeEdge);
+		this.activeEdge = null;
+	    }
 	}
     }
 

@@ -66,6 +66,21 @@ class Graph {
 	edge.destroy(animate);
     }
 
+    closestDotTo(x, y) {
+	var closestDot = null;
+	var closestDistance = Infinity;
+	for (const dot of this.dots) {
+	    const dx = dot.x - x;
+	    const dy = dot.y - y;
+	    const distance = Math.sqrt(dx*dx + dy*dy);
+	    if (distance < closestDistance) {
+		closestDistance = distance;
+		closestDot = dot;
+	    }
+	}
+	return closestDot;
+    }
+
     setAlpha(alpha) {
 	this.alpha = alpha;
 	this.tris.forEach(tri => tri.setAlpha(alpha));
@@ -129,18 +144,29 @@ class Edge {
 	this.end = null;
 	
 	this.shadow = graph.draw.line(start.x, start.y, start.x, start.y)
-	    .stroke({width: 5, color: 'rgba(20,20,20,0.4)'});
-	this.shadow.node.style = "pointer-events: none";
+	    .stroke({width: 7, color: 'rgba(20,20,20,0.4)'});
 	
 	this.line = graph.draw.line(start.x, start.y, start.x, start.y)
 	    .stroke({width: 3, color: 'yellow',
-		     dasharray: '5 5'});;
-	this.line.node.style = "pointer-events: none";
+		     dasharray: '5 5'});
 	
 	start.edges.push(this);
 	if (end) {
 	    this.connect(end);
+	} else {
+	    // No pointer events while dragging the line.
+	    this.turnOffPointerEvents();
 	}
+    }
+
+    turnOnPointerEvents() {
+	this.shadow.node.style = "";
+	this.line.node.style = "";
+    }
+
+    turnOffPointerEvents() {
+	this.shadow.node.style = "pointer-events: none";
+	this.line.node.style = "pointer-events: none";
     }
 
     drawTo(x, y) {
@@ -150,14 +176,13 @@ class Edge {
 
     showIsCorrect(easyMode, isCorrect) {
 	if (easyMode) {
-	    this.shadow.show();
 	    if (isCorrect) {
-		this.shadow.stroke({color: 'rgba(0,255,0,0.8)'});
+		this.shadow.stroke({color: 'rgba(0,255,0,0.6)'});
 	    } else {
-		this.shadow.stroke({color: 'rgba(255,0,0,0.8)'});
+		this.shadow.stroke({color: 'rgba(255,0,0,0.6)'});
 	    }
 	} else {
-	    this.shadow.hide();
+	    this.hideShadow();
 	}
     }
 
@@ -165,13 +190,20 @@ class Edge {
 	this.end = end;
 	this.drawTo(end.x, end.y);
 	end.edges.push(this);
-	this.line.node.style = "";  // Allow pointer events.
+	this.turnOnPointerEvents();
 	this.line.stroke({width: 2, color: 'black', dasharray: ''});;
 	this.start.updateEdgeCount();
 	this.end.updateEdgeCount();
 	this.shadow.insertBefore(this.graph.layerMarkers.edges);
 	this.line.insertBefore(this.graph.layerMarkers.edges);
-	this.shadow.hide();
+	this.hideShadow();
+    }
+
+    hideShadow() {
+	// We don't actually hide it, but set it to be transparent.  We do
+	// this because we want the line to be thicker, so it's easier to
+	// click on.
+	this.shadow.stroke({color: 'rgba(0,0,0,0)'});
     }
 
     destroy(animate = false) {

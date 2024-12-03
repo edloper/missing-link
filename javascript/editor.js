@@ -262,16 +262,16 @@ class LevelEditor {
 	this.removeDot(dot);
     }
 
-    startDragDot(dot) {
+    startDragDot(dot, x, y) {
 	dot.tris.forEach(tri => tri.setAlpha(0.5));
     }
 
-    dragDot(dot, e) {
-        const point = this.draw.point(e.clientX, e.clientY);
+    dragDot(dot, x, y) {
+        const point = this.draw.point(x, y);
 	dot.move(point.x, point.y);
     }
 
-    endDragDot(dot) {
+    endDragDot(dot, x, y) {
 	dot.tris.forEach(tri => tri.setAlpha(1));
 	dot.tris.forEach(tri => this.updateTriColor(tri));
     }

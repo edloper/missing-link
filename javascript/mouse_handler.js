@@ -15,27 +15,66 @@ class MouseHandler {
 	this.game.draw.on('contextmenu', (e) => e.preventDefault());
 	document.addEventListener('mousemove', (e) => this.mouseMove(e));
 	document.addEventListener('mouseup', (e) => this.mouseUp(e));
+	document.addEventListener('touchmove', (e) => this.touchMove(e));
+	document.addEventListener('touchend', (e) => this.touchEnd(e));
+
+	this.game.draw.on('touchstart', (e) => this.touchStart(e));
+	
 	this.updateViewbox();
+    }
+
+    touchStart(e, obj=null) {
+	const touch = e.targetTouches[0];
+	e.preventDefault();
+	e.stopPropagation();
+	this.startClick(touch.clientX, touch.clientY, obj);
+    }
+
+    touchMove(e) {
+	if (this.clickStart === null) { return; }
+	//e.preventDefault();  //  (inside passive event listener?)
+	const touch = e.targetTouches[0];
+	this.move(touch.clientX, touch.clientY);
+    }
+
+    touchEnd(e) {
+	console.log(e)
+	if (this.clickStart === null) { return; }
+	e.preventDefault();
+	const touch = e.changedTouches[0];
+	this.endClick(touch.clientX, touch.clientY);
     }
 
     mouseDown(e, obj=null) {
 	e.preventDefault();
+	e.stopPropagation();
+	this.startClick(e.clientX, e.clientY, obj);
+    }
+    
+    mouseMove(e) {
+	if (this.clickStart === null) { return; }
+	e.preventDefault();
+	this.move(e.clientX, e.clientY, e.button);
+    }
+
+    mouseUp(e) {
+	e.preventDefault();
+	this.endClick(e.clientX, e.clientY, e.button);
+    }
+    
+    startClick(x, y, obj=null) {
 	this.clickObj = obj;
 	this.clickStart = performance.now();
-	this.clickPoint = this.game.draw.point(e.clientX, e.clientY);
-	this.clickPos = {x: e.clientX, y: e.clientY}
+	this.clickPoint = this.game.draw.point(x, y);
+	this.clickPos = {x: x, y: y};
 	this.clickViewOffset = {x: this.viewOffset.x, y: this.viewOffset.y}
-	e.stopPropagation();
 	if (obj instanceof Dot) {
 	    this.clickStartPos = {x: obj.x, y: obj.y};
 	}
     }
-    
-    mouseMove(e) {
-	e.preventDefault();
-	// todo: use clientX, not point, for loc -- smoother?
-	if (this.clickStart === null) { return; }
-        const point = this.game.draw.point(e.clientX, e.clientY);
+
+    move(x, y, button = 0) {
+        const point = this.game.draw.point(x, y);
 	if (!this.isDragging) {
 	    const now = performance.now();
 	    if (((now - this.clickStart) < DRAG_MIN_TIME) &&
@@ -43,24 +82,19 @@ class MouseHandler {
 		(Math.abs(this.clickPoint.y - point.y) < DRAG_MIN_PIXELS / this.zoomLevel)) {
 		return;  // Minimum threshold for "dragging"
 	    }
-	    if (e.button == 0) {
+	    if (button == 0) {
 		if (this.game.startDragDot && this.clickObj instanceof Dot) {
-		    this.game.startDragDot(this.clickObj);
-		}
-		if (this.game.startDragTri && this.clickObj instanceof Tri) {
-		    this.game.startDragTri(this.clickObj);
+		    this.game.startDragDot(this.clickObj, point.x, point.y);
 		}
 	    }
 	    this.isDragging = true;
 	}
 	if (this.game.dragDot && this.clickObj instanceof Dot) {
-	    this.game.dragDot(this.clickObj, e);
-	} else if (this.game.dragTr && this.clickObj instanceof Tri) {
-	    this.game.dragTri(this.clickObj, e);
+	    this.game.dragDot(this.clickObj, x, y);
 	} else {
 	    // Drag the canvas.
-	    var dx = (e.clientX - this.clickPos.x) / this.zoomLevel;
-	    var dy = (e.clientY - this.clickPos.y) / this.zoomLevel;
+	    var dx = (x - this.clickPos.x) / this.zoomLevel;
+	    var dy = (y - this.clickPos.y) / this.zoomLevel;
 	    this.viewOffset.x = this.clickViewOffset.x - dx;
 	    this.viewOffset.y = this.clickViewOffset.y - dy;
 	    this.viewOffset.x = Math.max(0, this.viewOffset.x);
@@ -73,22 +107,18 @@ class MouseHandler {
 	}
     }
 
-    mouseUp(e) {
-	e.preventDefault();
+    endClick(x, y, button = 0) {
 	if (this.clickStart === null) { return; }
 	this.clickStart = null;
-        const point = this.game.draw.point(e.clientX, e.clientY);
+        const point = this.game.draw.point(x, y);
 	if (this.isDragging) {
-	    if (e.button == 0) {
+	    if (button == 0) {
 		if (this.game.endDragDot && this.clickObj instanceof Dot) {
-		    this.game.endDragDot(this.clickObj);
-		}
-		if (this.game.endDragTri && this.clickObj instanceof Tri) {
-		    this.game.endDragTri(this.clickObj);
+		    this.game.endDragDot(this.clickObj, point.x, point.y);
 		}
 	    }
 	} else {
-	    if (e.button == 0) {
+	    if (button == 0) {
 		if (this.game.clickDot && this.clickObj instanceof Dot) {
 		    this.game.clickDot(this.clickObj);
 		}
@@ -101,7 +131,7 @@ class MouseHandler {
 		else if (this.game.click) {
 		    this.game.click(point.x, point.y);
 		}
-	    } else if (e.button == 2) {
+	    } else if (button == 2) {
 		if (this.game.rightClickDot && this.clickObj instanceof Dot) {
 		    this.game.rightClickDot(this.clickObj);
 		}
