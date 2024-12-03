@@ -1,0 +1,158 @@
+const DRAG_MIN_TIME = 200;  // msec
+const DRAG_MIN_PIXELS = 6;
+
+class MouseHandler {
+    constructor(game) {
+	this.game = game
+	this.clickStart = null;  // When did the user start clicking
+	this.clickObj = null;    // What did the user click on?
+	this.isDragging = false;
+	this.zoomLevel = 1;
+	this.viewOffset = {x: 0, y: 0};
+
+	this.game.draw.on('mousedown', (e) => this.mouseDown(e));
+	this.game.draw.on('wheel', (e) => this.mouseWheel(e));
+	this.game.draw.on('contextmenu', (e) => e.preventDefault());
+	document.addEventListener('mousemove', (e) => this.mouseMove(e));
+	document.addEventListener('mouseup', (e) => this.mouseUp(e));
+	this.updateViewbox();
+    }
+
+    mouseDown(e, obj=null) {
+	e.preventDefault();
+	this.clickObj = obj;
+	this.clickStart = performance.now();
+	this.clickPoint = this.game.draw.point(e.clientX, e.clientY);
+	this.clickPos = {x: e.clientX, y: e.clientY}
+	this.clickViewOffset = {x: this.viewOffset.x, y: this.viewOffset.y}
+	e.stopPropagation();
+	if (obj instanceof Dot) {
+	    this.clickStartPos = {x: obj.x, y: obj.y};
+	}
+    }
+    
+    mouseMove(e) {
+	e.preventDefault();
+	// todo: use clientX, not point, for loc -- smoother?
+	if (this.clickStart === null) { return; }
+        const point = this.game.draw.point(e.clientX, e.clientY);
+	if (!this.isDragging) {
+	    const now = performance.now();
+	    if (((now - this.clickStart) < DRAG_MIN_TIME) &&
+		(Math.abs(this.clickPoint.x - point.x) < DRAG_MIN_PIXELS / this.zoomLevel) &&
+		(Math.abs(this.clickPoint.y - point.y) < DRAG_MIN_PIXELS / this.zoomLevel)) {
+		return;  // Minimum threshold for "dragging"
+	    }
+	    if (e.button == 0) {
+		if (this.game.startDragDot && this.clickObj instanceof Dot) {
+		    this.game.startDragDot(this.clickObj);
+		}
+		if (this.game.startDragTri && this.clickObj instanceof Tri) {
+		    this.game.startDragTri(this.clickObj);
+		}
+	    }
+	    this.isDragging = true;
+	}
+	if (this.game.dragDot && this.clickObj instanceof Dot) {
+	    this.game.dragDot(this.clickObj, e);
+	} else if (this.game.dragTr && this.clickObj instanceof Tri) {
+	    this.game.dragTri(this.clickObj, e);
+	} else {
+	    // Drag the canvas.
+	    var dx = (e.clientX - this.clickPos.x) / this.zoomLevel;
+	    var dy = (e.clientY - this.clickPos.y) / this.zoomLevel;
+	    this.viewOffset.x = this.clickViewOffset.x - dx;
+	    this.viewOffset.y = this.clickViewOffset.y - dy;
+	    this.viewOffset.x = Math.max(0, this.viewOffset.x);
+	    this.viewOffset.y = Math.max(0, this.viewOffset.y);
+	    this.viewOffset.x = Math.min(this.viewOffset.x,
+					 this.game.width * (1 - 1/this.zoomLevel));
+	    this.viewOffset.y = Math.min(this.viewOffset.y,
+					 this.game.height * (1 - 1/this.zoomLevel));
+	    this.updateViewbox();
+	}
+    }
+
+    mouseUp(e) {
+	e.preventDefault();
+	if (this.clickStart === null) { return; }
+	this.clickStart = null;
+        const point = this.game.draw.point(e.clientX, e.clientY);
+	if (this.isDragging) {
+	    if (e.button == 0) {
+		if (this.game.endDragDot && this.clickObj instanceof Dot) {
+		    this.game.endDragDot(this.clickObj);
+		}
+		if (this.game.endDragTri && this.clickObj instanceof Tri) {
+		    this.game.endDragTri(this.clickObj);
+		}
+	    }
+	} else {
+	    if (e.button == 0) {
+		if (this.game.clickDot && this.clickObj instanceof Dot) {
+		    this.game.clickDot(this.clickObj);
+		}
+		else if (this.game.clickTri && this.clickObj instanceof Tri) {
+		    this.game.clickTri(this.clickObj);
+		}
+		else if (this.game.clickEdge && this.clickObj instanceof Edge) {
+		    this.game.clickEdge(this.clickObj);
+		}
+		else if (this.game.click) {
+		    this.game.click(point.x, point.y);
+		}
+	    } else if (e.button == 2) {
+		if (this.game.rightClickDot && this.clickObj instanceof Dot) {
+		    this.game.rightClickDot(this.clickObj);
+		}
+		if (this.game.rightClickTri && this.clickObj instanceof Tri) {
+		    this.game.rightClickTri(this.clickObj);
+		} else if (this.game.rightClick) {
+		    this.game.rightClick(point.x, point.y)
+		}
+	    }
+	}
+	this.clickObj = null;
+	this.isDragging = false;
+    }
+
+    zoomOut() {
+	this.viewOffset.x = 0;
+	this.viewOffset.y = 0;
+	this.zoomLevel = 1.0;
+	this.updateViewbox();
+    }
+    
+    mouseWheel(e) {
+	e.preventDefault(); // Don't scroll page.
+        const point = this.game.draw.point(e.clientX, e.clientY);
+	
+	var zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+	// Don't zoom out past 100%.
+	if ((this.zoomLevel * zoomFactor) <= 1) {
+	    zoomFactor = 1/this.zoomLevel;
+	}
+	// Zoom in/out, keeping the mouse at the same canvas position.
+	this.viewOffset.x += (point.x - this.viewOffset.x) * (1 - 1/zoomFactor);
+	this.viewOffset.y += (point.y - this.viewOffset.y) * (1 - 1/zoomFactor);
+	// Don't view outside the original viewport.
+        this.viewOffset.x = Math.max(this.viewOffset.x, 0);
+        this.viewOffset.y = Math.max(this.viewOffset.y, 0);
+	this.viewOffset.x = Math.min(this.viewOffset.x,
+				     this.game.width * (1 - 1/this.zoomLevel));
+	this.viewOffset.y = Math.min(this.viewOffset.y,
+				     this.game.height * (1 - 1/this.zoomLevel));
+	// Update zoom level
+	this.zoomLevel *= zoomFactor;
+	this.updateViewbox();
+    }
+
+    updateViewbox() {
+	var width = this.game.width;
+	var height = this.game.height;
+	this.game.draw.viewbox(
+	    this.viewOffset.x, this.viewOffset.y,
+	    width / this.zoomLevel, height / this.zoomLevel); 
+    }
+}
+
