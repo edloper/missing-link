@@ -328,6 +328,13 @@ class Game {
 	this.activeEdge = this.addEdge(dot);
     }
 
+    cancelDrag() {
+	if (this.activeEdge) {
+	    this.graph.removeEdge(this.activeEdge);
+	    this.activeEdge = null;
+	}
+    }
+
     dragDot(dot, x, y) {
 	if (!this.activeEdge) {
 	    return;

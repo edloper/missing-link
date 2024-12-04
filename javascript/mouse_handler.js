@@ -21,6 +21,8 @@ class MouseHandler {
 	document.addEventListener('touchend', (e) => this.touchEnd(e));
 
 	this.game.draw.on('touchstart', (e) => this.touchStart(e));
+
+	this.debugDot = this.game.circle().fill("red").move(0, 0).radius(6);
 	
 	this.updateViewbox();
     }
@@ -33,11 +35,12 @@ class MouseHandler {
 	    const touch = e.touches[0];
 	    this.startClick(touch.clientX, touch.clientY, obj);
 	} else if (e.touches.length == 2) {
-	    if (!this.isDragging) {
-		this.pinchStart(e.touches);
-	    } else {
-		console.log("Multitouch after drag -- ignoring");
+	    if (this.isDragging) {
+		// Pinch overrides drag.
+		this.isDragging = false;
+		if (this.game.cancelDrag) { this.game.cancelDrag(); }
 	    }
+	    this.pinchStart(e.touches);
 	}
     }
 
@@ -98,6 +101,7 @@ class MouseHandler {
 	const zoomFactor = distance / this.lastPinchDistance;
 	const centerPoint = {x: (points[0].x + points[1].x)/2,
 			     y: (points[0].y + points[1].y)/2}
+	this.debugDot.move(centerPoint.x, centerPoint.y);
 	this.zoom(centerPoint, zoomFactor);
 	this.lastPinchDistance = distance;
     }
