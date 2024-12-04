@@ -22,7 +22,7 @@ class MouseHandler {
 
 	this.game.draw.on('touchstart', (e) => this.touchStart(e));
 
-	this.debugDot = this.game.circle().fill("red").move(0, 0).radius(6);
+	this.debugDot = this.game.draw.circle().fill("red").move(0, 0).radius(6);
 	
 	this.updateViewbox();
     }
