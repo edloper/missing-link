@@ -21,10 +21,6 @@ class MouseHandler {
 	document.addEventListener('touchend', (e) => this.touchEnd(e));
 
 	this.game.draw.on('touchstart', (e) => this.touchStart(e));
-
-	this.debugDot = this.game.draw.circle().fill("red").move(0, 0).radius(6);
-	this.debugDot2 = this.game.draw.circle().fill("yellow").move(0, 0).radius(6);
-	this.debugDot3 = this.game.draw.circle().fill("blue").move(0, 0).radius(6);
 	
 	this.updateViewbox();
     }
@@ -96,16 +92,13 @@ class MouseHandler {
 	    return;
 	}
 	const points = [
-	    this.game.draw.point(touches[0].eventX, touches[0].eventY),
-	    this.game.draw.point(touches[1].eventX, touches[1].eventY)];
+	    this.game.draw.point(touches[0].clientX, touches[0].clientY),
+	    this.game.draw.point(touches[1].clientX, touches[1].clientY)];
 	const distance = Math.hypot(touches[0].pageX - touches[1].pageX,
 				    touches[0].pageY - touches[1].pageY);
 	const zoomFactor = distance / this.lastPinchDistance;
 	const centerPoint = {x: (points[0].x + points[1].x)/2,
 			     y: (points[0].y + points[1].y)/2}
-	this.debugDot.move(points[0].x, points[0].y);
-	this.debugDot2.move(points[1].x, points[1].y);
-	this.debugDot3.move(centerPoint.x, centerPoint.y);
 	this.zoom(centerPoint, zoomFactor);
 	this.lastPinchDistance = distance;
     }
