@@ -4,13 +4,18 @@ const DRAG_MIN_PIXELS = 6;
 class MouseHandler {
     constructor(game) {
 	this.game = game
-	this.clickStart = null;  // When did the user start clicking
+	this.clickStartTime = null;  // When did the user start clicking
 	this.clickPoint = null;  // Where did they start clicking?
 	this.clickObj = null;    // What did the user click on?
 	this.pinchTouches = null;  // Touches that started the pinch
-	this.isDragging = false;
 	this.zoomLevel = 1;
 	this.viewOffset = {x: 0, y: 0};
+
+	this.state = null;
+	// Possible values for this.state:
+	this.DRAGGING = 'dragging';
+	this.CLICKING = 'clicking';
+	this.PINCHING = 'pinching';
 
 	this.game.draw.on('mousedown', (e) => this.mouseDown(e));
 	this.game.draw.on('wheel', (e) => this.mouseWheel(e));
@@ -31,52 +36,56 @@ class MouseHandler {
 	
 	if (e.touches.length == 1) {
 	    const touch = e.touches[0];
+	    this.state = this.CLICKING;
 	    this.startClick(touch.clientX, touch.clientY, obj);
 	} else if (e.touches.length == 2) {
-	    if (this.isDragging) {
-		// Pinch overrides drag.
-		this.isDragging = false;
+	    if (this.state == this.DRAGGING) {
 		if (this.game.cancelDrag) { this.game.cancelDrag(); }
 	    }
+	    this.state = this.PINCHING;
 	    this.pinchStart(e.touches);
 	}
     }
 
     touchMove(e) {
-	if (this.pinchTouches) {
+	if (this.state == this.PINCHING) {
 	    this.pinchMove(e.touches);
-	} else if (this.clickStart) {
+	} else if (this.state) {
 	    const touch = e.targetTouches[0];
 	    this.move(touch.clientX, touch.clientY);
 	}
     }
 
     touchEnd(e) {
-	if (this.pinchTouches) {
+	if (this.state == this.PINCHING) {
 	    e.preventDefault();
     	    this.pinchTouches = null;
-	} else if (this.clickStart) {
+	} else if (this.state) {
 	    e.preventDefault();
 	    const touch = e.changedTouches[0];
 	    this.endClick(touch.clientX, touch.clientY);
 	}
+	this.state = null;
     }
 
     mouseDown(e, obj=null) {
 	e.preventDefault();
 	e.stopPropagation();
+	this.state = this.CLICKING;
 	this.startClick(e.clientX, e.clientY, obj);
     }
     
     mouseMove(e) {
-	if (this.clickStart === null) { return; }
+	if (this.state == null) { return; }
 	e.preventDefault();
 	this.move(e.clientX, e.clientY, e.button);
     }
 
     mouseUp(e) {
+	if (this.state == null) { return; }
 	e.preventDefault();
 	this.endClick(e.clientX, e.clientY, e.button);
+	this.state = null;
     }
 
     pinchStart(touches) {
@@ -105,7 +114,7 @@ class MouseHandler {
     
     startClick(x, y, obj=null) {
 	this.clickObj = obj;
-	this.clickStart = performance.now();
+	this.clickStartTime = performance.now();
 	this.clickPoint = this.game.draw.point(x, y);
 	this.clickPos = {x: x, y: y};
 	this.clickViewOffset = {x: this.viewOffset.x, y: this.viewOffset.y}
@@ -116,9 +125,9 @@ class MouseHandler {
 
     move(x, y, button = 0) {
         const point = this.game.draw.point(x, y);
-	if (!this.isDragging) {
+	if (this.state != this.DRAGGING) {
 	    const now = performance.now();
-	    if (((now - this.clickStart) < DRAG_MIN_TIME) &&
+	    if (((now - this.clickStartTime) < DRAG_MIN_TIME) &&
 		(Math.abs(this.clickPoint.x - point.x) < DRAG_MIN_PIXELS / this.zoomLevel) &&
 		(Math.abs(this.clickPoint.y - point.y) < DRAG_MIN_PIXELS / this.zoomLevel)) {
 		return;  // Minimum threshold for "dragging"
@@ -128,7 +137,7 @@ class MouseHandler {
 		    this.game.startDragDot(this.clickObj, point.x, point.y);
 		}
 	    }
-	    this.isDragging = true;
+	    this.state = this.DRAGGING;
 	}
 	if (this.game.dragDot && this.clickObj instanceof Dot) {
 	    this.game.dragDot(this.clickObj, x, y);
@@ -149,10 +158,8 @@ class MouseHandler {
     }
 
     endClick(x, y, button = 0) {
-	if (this.clickStart === null) { return; }
-	this.clickStart = null;
         const point = this.game.draw.point(x, y);
-	if (this.isDragging) {
+	if (this.state == this.DRAGGING) {
 	    if (button == 0) {
 		if (this.game.endDragDot && this.clickObj instanceof Dot) {
 		    this.game.endDragDot(this.clickObj, point.x, point.y);
@@ -184,7 +191,7 @@ class MouseHandler {
 	    }
 	}
 	this.clickObj = null;
-	this.isDragging = false;
+	this.state = null;
     }
 
     zoomOut() {
