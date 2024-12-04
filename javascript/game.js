@@ -137,8 +137,11 @@ class Game {
 		reader.readAsDataURL(file);
 	    }
 	});
-	$("#gameUndo").click(() => { this.undo(); });
-	$("#gameHint").click(() => { this.hint(); });
+	$("#gameUndo").click(e => { this.undo(); });
+	$("#gameHint").click(e => { this.hint(); });
+	// Explicitly bind double-click to prevent it from zooming on touch devices.
+	$("#gameUndo").dblclick(e => { this.undo(); e.preventDefault(); });
+	$("#gameHint").dblclick(e => { this.hint(); e.preventDefault(); });
 	new ToggleButton($("#gameEasyMode"), {
 	    label: "Easy Mode",
 	    height: 30, width: 80,

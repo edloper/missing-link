@@ -73,7 +73,6 @@ class LevelEditor {
 	this.graph.setAlpha(1.0);
 	this.thumbnailPngDataUrl = null;
 	this.addControls();
-	confetti(this.draw);
     }
 
     // Helper for the constructor -- add controls for the editor.
@@ -236,6 +235,7 @@ class LevelEditor {
 
     removeDot(dot) {
     	this.graph.removeDot(dot);
+	this.selection = this.selection.filter(obj => obj !== dot);
     }
 
     click(x, y) {

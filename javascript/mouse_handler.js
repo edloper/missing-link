@@ -1,5 +1,6 @@
 const DRAG_MIN_TIME = 200;  // msec
 const DRAG_MIN_PIXELS = 6;
+const MAX_ZOOM_LEVEL = 20;
 
 class MouseHandler {
     constructor(game) {
@@ -7,7 +8,6 @@ class MouseHandler {
 	this.clickStartTime = null;  // When did the user start clicking
 	this.clickPoint = null;  // Where did they start clicking?
 	this.clickObj = null;    // What did the user click on?
-	this.pinchTouches = null;  // Touches that started the pinch
 	this.zoomLevel = 1;
 	this.viewOffset = {x: 0, y: 0};
 
@@ -29,6 +29,34 @@ class MouseHandler {
 	
 	this.updateViewbox();
     }
+
+    //==================================================================
+    // Mouse handlers
+
+    mouseDown(e, obj=null) {
+	e.preventDefault();
+	e.stopPropagation();
+	if (!this.state) {
+	    this.state = this.CLICKING;
+	    this.startClick(e.clientX, e.clientY, obj);
+	}
+    }
+    
+    mouseMove(e) {
+	if (!this.state) { return; }
+	e.preventDefault();
+	this.move(e.clientX, e.clientY, e.button);
+    }
+
+    mouseUp(e) {
+	if (!this.state) { return; }
+	e.preventDefault();
+	this.endClick(e.clientX, e.clientY, e.button);
+	this.state = null;
+    }
+
+    //==================================================================
+    // Touch handlers
 
     touchStart(e, obj=null) {
 	e.preventDefault();
@@ -59,7 +87,6 @@ class MouseHandler {
     touchEnd(e) {
 	if (this.state == this.PINCHING) {
 	    e.preventDefault();
-    	    this.pinchTouches = null;
 	} else if (this.state) {
 	    e.preventDefault();
 	    const touch = e.changedTouches[0];
@@ -68,50 +95,42 @@ class MouseHandler {
 	this.state = null;
     }
 
-    mouseDown(e, obj=null) {
-	e.preventDefault();
-	e.stopPropagation();
-	this.state = this.CLICKING;
-	this.startClick(e.clientX, e.clientY, obj);
-    }
-    
-    mouseMove(e) {
-	if (this.state == null) { return; }
-	e.preventDefault();
-	this.move(e.clientX, e.clientY, e.button);
-    }
-
-    mouseUp(e) {
-	if (this.state == null) { return; }
-	e.preventDefault();
-	this.endClick(e.clientX, e.clientY, e.button);
-	this.state = null;
-    }
+    //==================================================================
+    // Pinch handling
 
     pinchStart(touches) {
-	const distance = Math.hypot(touches[0].pageX - touches[1].pageX,
-				    touches[0].pageY - touches[1].pageY);
-	this.pinchTouches = touches;
-	this.lastPinchDistance = distance;
+	this.lastPinchInfo = this.getPinchInfo(touches);
     }
 
     pinchMove(touches) {
 	if (touches.length != 2) {
-	    this.pinchTouches = null;
+	    this.state = null;  // Cancel pinch-to-zoom if >2 touches.
 	    return;
 	}
+	const pinchInfo = this.getPinchInfo(touches);
+	const dx = pinchInfo.center.x - this.lastPinchInfo.center.x;
+	const dy = pinchInfo.center.y - this.lastPinchInfo.center.y;
+	const zoomFactor = pinchInfo.distance / this.lastPinchInfo.distance;
+	this.moveViewport(dx, dy);
+	this.zoomViewport(pinchInfo.center, zoomFactor);
+	// Need to compute pinch info again after shifting viewport.
+	this.lastPinchInfo = this.getPinchInfo(touches);
+    }
+    
+    getPinchInfo(touches) {
 	const points = [
 	    this.game.draw.point(touches[0].clientX, touches[0].clientY),
 	    this.game.draw.point(touches[1].clientX, touches[1].clientY)];
 	const distance = Math.hypot(touches[0].pageX - touches[1].pageX,
 				    touches[0].pageY - touches[1].pageY);
-	const zoomFactor = distance / this.lastPinchDistance;
-	const centerPoint = {x: (points[0].x + points[1].x)/2,
-			     y: (points[0].y + points[1].y)/2}
-	this.zoom(centerPoint, zoomFactor);
-	this.lastPinchDistance = distance;
+	const center = {x: (points[0].x + points[1].x)/2,
+			y: (points[0].y + points[1].y)/2}
+	return {center: center, distance: Math.max(distance, 1)}
     }
-    
+
+    //==================================================================
+    // Generic touch/mouse handlers
+
     startClick(x, y, obj=null) {
 	this.clickObj = obj;
 	this.clickStartTime = performance.now();
@@ -145,15 +164,7 @@ class MouseHandler {
 	    // Drag the canvas.
 	    var dx = (x - this.clickPos.x) / this.zoomLevel;
 	    var dy = (y - this.clickPos.y) / this.zoomLevel;
-	    this.viewOffset.x = this.clickViewOffset.x - dx;
-	    this.viewOffset.y = this.clickViewOffset.y - dy;
-	    this.viewOffset.x = Math.max(0, this.viewOffset.x);
-	    this.viewOffset.y = Math.max(0, this.viewOffset.y);
-	    this.viewOffset.x = Math.min(this.viewOffset.x,
-					 this.game.width * (1 - 1/this.zoomLevel));
-	    this.viewOffset.y = Math.min(this.viewOffset.y,
-					 this.game.height * (1 - 1/this.zoomLevel));
-	    this.updateViewbox();
+	    this.moveViewport(dx, dy)
 	}
     }
 
@@ -205,13 +216,28 @@ class MouseHandler {
 	e.preventDefault(); // Don't scroll page.
         const point = this.game.draw.point(e.clientX, e.clientY);
 	var zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
-	this.zoom(point, zoomFactor);
+	this.zoomViewport(point, zoomFactor);
     }
 
-    zoom(point, zoomFactor) {
+    moveViewport(dx, dy) {
+	this.viewOffset.x = this.clickViewOffset.x - dx;
+	this.viewOffset.y = this.clickViewOffset.y - dy;
+	this.viewOffset.x = Math.max(0, this.viewOffset.x);
+	this.viewOffset.y = Math.max(0, this.viewOffset.y);
+	this.viewOffset.x = Math.min(this.viewOffset.x,
+				     this.game.width * (1 - 1/this.zoomLevel));
+	this.viewOffset.y = Math.min(this.viewOffset.y,
+				     this.game.height * (1 - 1/this.zoomLevel));
+	this.updateViewbox();
+    }
+
+    zoomViewport(point, zoomFactor) {
 	// Don't zoom out past 100%.
 	if ((this.zoomLevel * zoomFactor) <= 1) {
 	    zoomFactor = 1/this.zoomLevel;
+	}
+	if ((this.zoomLevel * zoomFactor) >= MAX_ZOOM_LEVEL) {
+	    zoomFactor = MAX_ZOOM_LEVEL/this.zoomLevel
 	}
 	// Zoom in/out, keeping the mouse at the same canvas position.
 	this.viewOffset.x += (point.x - this.viewOffset.x) * (1 - 1/zoomFactor);
