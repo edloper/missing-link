@@ -24,7 +24,7 @@ class Graph {
     }
 
     addTri(corners, color, highlight = false) {
-	var tri = new Tri(this, corners, color, this.alpha);
+	var tri = new Tri(this, corners, color, this.alpha, highlight);
 	this.tris.push(tri);
 	corners.forEach(dot => dot.addTri(tri));
 	return tri;
@@ -442,9 +442,11 @@ class Tri{
     }
 
     destroy() {
-	this.polygon.remove();
-	this.highlightPoly.remove();
-	this.polygon = null;
+	if (this.polygon) {
+	    this.polygon.remove();
+	    this.highlightPoly.remove();
+	    this.polygon = null;
+	}
     }
 }
 

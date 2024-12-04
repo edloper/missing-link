@@ -224,7 +224,7 @@ class LevelEditor {
     }
 
     addTri(corners, color) {
-	const tri = this.graph.addTri(corners, color);
+	const tri = this.graph.addTri(corners, color, /*highlight=*/ false);
 	tri.polygon.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, tri); });
 	this.updateTriColor(tri);
     }
@@ -239,7 +239,29 @@ class LevelEditor {
     }
 
     click(x, y) {
-	this.addDot(x, y);
+	const dot = this.addDot(x, y);
+	this.subdivideTriangles(dot);
+    }
+
+    subdivideTriangles(dot) {
+	const DOT_RADIUS = 7;
+	const originalTris = Array.from(this.graph.tris);
+	console.log("===SUB===");
+	for (const tri of originalTris) {
+	    for (let i = 0; i < 3; i++) {
+		const p1 = tri.corners[i];
+		const p2 = tri.corners[(i+1) % 3];
+		const p3 = tri.corners[(i+2) % 3];
+		if (circleIntersectsLine(dot, DOT_RADIUS, p1, p2)) {
+		    console.log("Subdividing!", p1, p2, p3, dot);
+		    this.addTri([dot, p1, p3], "red");
+		    this.addTri([dot, p2, p3], "green");
+		    this.removeTri(tri);
+		    console.log(this.graph.tris);
+		}
+	    }
+	}
+		    console.log(this.graph.tris);
     }
 
     clickDot(dot) {

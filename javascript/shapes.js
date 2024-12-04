@@ -80,3 +80,19 @@ function linesIntersect(p1, p2, p3, p4) {
 	return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
     }
 };
+
+function circleIntersectsLine(center, radius, p1, p2) {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const distance = 
+	  Math.abs(dy*center.x - dx*center.y + p2.x*p1.y - p2.y*p1.x) /
+	  Math.hypot(dx, dy);
+    if (distance > radius) {
+	return false;
+    }
+    const [minX, maxX] = (p1.x < p2.x) ? [p1.x, p2.x] : [p2.x, p1.x];
+    const [minY, maxY] = (p1.y < p2.y) ? [p1.y, p2.y] : [p2.y, p1.y];
+    const inBounds = ((minX - radius/2 <= center.x) && (center.x <= maxX + radius/2) &&
+		      (minY - radius/2 <= center.y) && (center.y <= maxY + radius/2));
+    return inBounds;
+}

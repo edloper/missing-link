@@ -107,10 +107,11 @@ class MouseHandler {
 	    this.state = null;  // Cancel pinch-to-zoom if >2 touches.
 	    return;
 	}
-	const pinchInfo = this.getPinchInfo(touches);
+	var pinchInfo = this.getPinchInfo(touches);
+	const zoomFactor = pinchInfo.distance / this.lastPinchInfo.distance;
+	
 	const dx = pinchInfo.center.x - this.lastPinchInfo.center.x;
 	const dy = pinchInfo.center.y - this.lastPinchInfo.center.y;
-	const zoomFactor = pinchInfo.distance / this.lastPinchInfo.distance;
 	this.moveViewport(dx, dy);
 	this.zoomViewport(pinchInfo.center, zoomFactor);
 	// Need to compute pinch info again after shifting viewport.
@@ -118,11 +119,11 @@ class MouseHandler {
     }
     
     getPinchInfo(touches) {
+	const distance = Math.hypot(touches[0].pageX - touches[1].pageX,
+				    touches[0].pageY - touches[1].pageY);
 	const points = [
 	    this.game.draw.point(touches[0].clientX, touches[0].clientY),
 	    this.game.draw.point(touches[1].clientX, touches[1].clientY)];
-	const distance = Math.hypot(touches[0].pageX - touches[1].pageX,
-				    touches[0].pageY - touches[1].pageY);
 	const center = {x: (points[0].x + points[1].x)/2,
 			y: (points[0].y + points[1].y)/2}
 	return {center: center, distance: Math.max(distance, 1)}
@@ -164,7 +165,7 @@ class MouseHandler {
 	    // Drag the canvas.
 	    var dx = (x - this.clickPos.x) / this.zoomLevel;
 	    var dy = (y - this.clickPos.y) / this.zoomLevel;
-	    this.moveViewport(dx, dy)
+	    this.moveViewport(dx, dy, this.clickViewOffset)
 	}
     }
 
@@ -219,9 +220,10 @@ class MouseHandler {
 	this.zoomViewport(point, zoomFactor);
     }
 
-    moveViewport(dx, dy) {
-	this.viewOffset.x = this.clickViewOffset.x - dx;
-	this.viewOffset.y = this.clickViewOffset.y - dy;
+    moveViewport(dx, dy, origin=null) {
+	origin ??= this.viewOffset;
+	this.viewOffset.x = origin.x - dx;
+	this.viewOffset.y = origin.y - dy;
 	this.viewOffset.x = Math.max(0, this.viewOffset.x);
 	this.viewOffset.y = Math.max(0, this.viewOffset.y);
 	this.viewOffset.x = Math.min(this.viewOffset.x,
