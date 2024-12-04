@@ -191,7 +191,7 @@ class Game {
 		return dot;
 	    },
 	    (corners, color) => {
-		const tri = this.graph.addTri(corners, color, true);
+		const tri = this.graph.addTri(corners, color);
 		tri.hide();  // Start with all triangles hidden.
 		tri.polygon.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, tri); });
 	    });
