@@ -233,9 +233,10 @@ class Game {
 		((item.start.index == start.index) && (item.end.index == end.index)) ||
 		    ((item.start.index == end.index) && (item.end.index == start.index)));
 	    console.assert(edges.length==1, "Failed to find edge");
-	    this.removeEdge(edges[0]);
+	    this.removeEdge(edges[0], /*animate=*/ true);
 	} else if (action == "remove") {
-	    this.addEdge(start, end);
+	    const edge = this.addEdge(start, end);
+	    edge.flash();
 	}
     }
 
@@ -296,18 +297,15 @@ class Game {
 	this.graph.removeDot(dot);
     }
 
-    addEdge(start, end = null, saveProgress=true) {
+    addEdge(start, end, saveProgress=true) {
 	var edge = this.graph.addEdge(start, end);
-	this.activeEdge = edge;
 	edge.line.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, edge); });
 	edge.shadow.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, edge); });
 	edge.line.on('touchstart', (e) => { this.mouseHandler.touchStart(e, edge); });
 	edge.shadow.on('touchstart', (e) => { this.mouseHandler.touchStart(e, edge); });
-	if (end) {
-	    this.revealTrianglesForEdge(edge);
-	    edge.showIsCorrect(this.easyMode, this.isCorrectEdge(edge));
-	}
-	if (saveProgress && end) {
+	this.revealTrianglesForEdge(edge);
+	edge.showIsCorrect(this.easyMode, this.isCorrectEdge(edge));
+	if (saveProgress) {
 	    this.saveProgress();
 	}
 	return edge;
@@ -328,7 +326,7 @@ class Game {
 	if (dot.numEdgesLeft() == 0) {
 	    return;  // No room for new edges.
 	}
-	this.activeEdge = this.addEdge(dot);
+	this.activeEdge = this.graph.addEdge(dot);
     }
 
     cancelDrag() {
@@ -350,27 +348,23 @@ class Game {
 	if (!this.activeEdge) {
 	    return;
 	}
-	const targetDot = this.graph.closestDotTo(x, y)
-	if (!this.okToConnectActiveEdgeTo(targetDot)) {
-	    this.graph.removeEdge(this.activeEdge);
-	    this.activeEdge = null;
-	} else {
-	    // Complete the edge.
-	    this.activeEdge.connect(targetDot);
-	    this.revealTrianglesForEdge(this.activeEdge);
-	    this.history.push(new GameHistoryEvent("add", this.activeEdge.start, this.activeEdge.end));
-	    this.activeEdge.showIsCorrect(this.easyMode, this.isCorrectEdge(this.activeEdge));
-	    this.saveProgress();
-	    this.activeEdge = null;
+	const endDot = this.graph.closestDotTo(x, y)
+	if (this.okToConnectActiveEdgeTo(endDot, x, y)) {
+	    const startDot = this.activeEdge.start;
+	    const edge = this.addEdge(startDot, endDot);
+	    this.history.push(new GameHistoryEvent("add", startDot, endDot));
 	}
+	this.graph.removeEdge(this.activeEdge);
+	this.activeEdge = null;
     }
 
-    okToConnectActiveEdgeTo(targetDot) {
+    okToConnectActiveEdgeTo(targetDot, x, y) {
 	return (
 	    (targetDot !== null) &&
-	    (targetDot !== this.activeEdge.start) &&
-	    (!this.dotsAreConnectedByEdge(this.activeEdge.start, targetDot)) &&
-	    (targetDot.numEdgesLeft() > 0)
+		(targetDot !== this.activeEdge.start) &&
+		(!this.dotsAreConnectedByEdge(this.activeEdge.start, targetDot)) &&
+		(targetDot.numEdgesLeft() > 0) &&
+		(Math.hypot(targetDot.x-x, targetDot.y-y) < 40)
 	);
     }
 
