@@ -62,13 +62,13 @@ class Game {
 	this.levelCompleteCallback = () => {};
 	this.clear();
 	this.progressCallback = null;
+	this.backButtonCallback = null;
     }
 
     clear() {
 	this.activeEdge = null;
 	this.graph.clear();
 	this.history = [];
-	this.numTrisShown = 0;
 	this.mouseHandler.zoomOut();
     }
 
@@ -76,12 +76,12 @@ class Game {
 	if (this.progressCallback) {
 	    // Only include edges with an end (not in-progress edge)
 	    const edges = this.graph.edges.filter(edge => edge.end);
+	    const numTrisShown = this.graph.tris.filter(tri => !tri.hidden).length;
+	    const totalTris = this.graph.tris.length;
 	    const progress = {
 		edges: edges.map(edge => [edge.start.index, edge.end.index]),
-		percentDone: Math.floor(
-		    100 * (this.graph.tris.filter(tri => !tri.hidden).length /
-			   this.graph.tris.length)),
-		finished: (this.numTrisShown == this.graph.tris.length),
+		percentDone: Math.floor(100 * (numTrisShown/totalTris)),
+		finished: (numTrisShown == this.graph.tris.length),
 	    };
 	    this.progressCallback(progress);
 	}
@@ -99,6 +99,7 @@ class Game {
     }
 
     setBackButtonCallback(callback) {
+	this.backButtonCallback = callback;
 	this.$backButton.click(callback);
     }
 
@@ -158,9 +159,25 @@ class Game {
 	    if ( event.altKey && event.key === 'h' ) {
 		this.hint();
 	    }
+	    if (event.key == 'Backspace') {
+		if (this.backButtonCallback) {
+		    this.backButtonCallback();
+		}
+	    }
 	});
+	// Back button. 
 	this.$backButton = $("<button class='gameBackButton'></button>");
-	this.$container.append(this.$backButton);
+	this.$container.append(this.$backButton);	
+	window.addEventListener('popstate', (event) => {
+	    if (event.state == null) {
+		window.history.pushState({}, ''); 
+		if (this.backButtonCallback) {
+		    event.preventDefault();
+		    this.backButtonCallback();
+		}
+	    }
+	});
+	window.history.pushState({}, ''); 
     }
 
     loadFromPng(dataUrl) {
@@ -383,8 +400,9 @@ class Game {
 	for (const tri of dot1.tris) {
 	    const corners = new Set(tri.corners.map(dot => dot.index));
 	    if (corners.delete(dot1.index) && corners.delete(dot2.index)) {
-		tri.hide();
-		this.numTrisShown--;
+		if (!tri.hidden) {
+		    tri.hide();
+		}
 	    }
 	}
     }
@@ -401,13 +419,13 @@ class Game {
 		    this.dotsAreConnectedByEdge(dot2, dot3)) {
 		    if (tri.hidden) {
 			tri.show();
-			this.numTrisShown++;
-			if (this.numTrisShown == this.graph.tris.length) {
-			    this.levelComplete();
-			}
 		    }
 		}
 	    }
+	}
+	const numTrisShown = this.graph.tris.filter(tri => !tri.hidden).length;
+	if (numTrisShown == this.graph.tris.length) {
+	    this.levelComplete();
 	}
     }
 
@@ -430,7 +448,8 @@ class Game {
     
     // The shadow indicates whether we've won this level or not.
     updateShadow() {
-	if (this.numTrisShown == this.graph.tris.length) {
+	const numTrisShown = this.graph.tris.filter(tri => !tri.hidden).length;
+	if (numTrisShown == this.graph.tris.length) {
 	    this.draw.css({"box-shadow": " 0px 0px 25px rgba(0, 255, 0, 1)"});
 	} else {
 	    this.draw.css({"box-shadow": " 0px 0px 8px rgba(0, 0, 0, 0.5)"});
