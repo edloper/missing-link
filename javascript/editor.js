@@ -6,28 +6,38 @@
 // HTML for the controls panel.
 const EDITOR_CONTROLS_HTML = `
       <table class="controls">
-	<tr class="textInput">
+	<tr>
+          <th rowspan="4">
+            <button id="editorUndo" class="actionButton">
+  	    <img src="images/undo.png" title="Undo">
+              <div class="label">Undo</div>
+            </button>
+          </th>
 	  <th align="right">Title</th>
-	  <td>
-	    <input type="text" id="editorTitle"
+	  <td colspan="2" style="width: 100%; padding-right: 20px">
+	    <input type="text" id="editorTitle" style="width: 100%"
                placeholder="A phrase that hints at the solution">
 	  </td>
 	</tr>
-	<tr class="textInput">
+	<tr>
 	  <th align="right">Save&nbsp;Game</th>
-	  <td>
-	    <input type="text" id="editorSaveFileName" placeholder="Filename">
+	  <td style="width: 100%">
+            <input type="text" id="editorSaveFileName"  style="width: 100%"
+               placeholder="Filename">
 	  </td>
+          <td style="padding-right: 20px">
+             <button id="editorSaveButton">Save</button></input>
+          </td>
 	</tr>
 	<tr>
 	  <th align="right">Load&nbsp;Game</th>
-	  <td>
+	  <td colspan="2">
 	    <input type="file" id="editorLoad" accept="application/json">
 	  </td>
 	</tr>
 	<tr>
 	  <th align="right">Delete&nbsp;Level</th>
-	  <td>
+	  <td colspan="2">
 	    <button id="editorDeleteGame">DELETE</button>
 	  </td>
 	</tr>
@@ -37,6 +47,10 @@ const EDITOR_CONTROLS_HTML = `
 	  <th align="right">Load Image</th>
 	  <td>
 	    <input type="file" id="editorLoadBackground" accept="image/*">
+	  </td>
+	  <th align="right" rowspan="3">Background Color</th>
+	  <td rowspan="3" width="0">
+	    <div id="editorBackgroundColorPicker"></div>
 	  </td>
 	</tr>
 	<tr>
@@ -49,12 +63,6 @@ const EDITOR_CONTROLS_HTML = `
 	  <th align="right">Hide Dots</th>
 	  <td>
 	    <input type="checkbox" id="editorHideDots"/>
-	  </td>
-	</tr>
-	<tr>
-	  <th align="right">Background Color</th>
-	  <td>
-	    <div id="editorBackgroundColorPicker"></div>
 	  </td>
 	</tr>
       </table>
@@ -107,9 +115,16 @@ class LevelEditor {
 	const $controls = $(EDITOR_CONTROLS_HTML);
 	$(this.container).append($controls);
 	$(this.container).find(".controls").css({width: this.width});
+	$("#editorUndo").click(e => { this.undo(); });
 	$("#editorSaveFileName").keypress((e) => {
 	    const filename = $("#editorSaveFileName").val();
 	    if (e.which == 13 && filename != "") {
+		this.saveLevel(filename);
+	    }
+	});
+	$("#editorSaveButton").click(() => {
+	    const filename = $("#editorSaveFileName").val();
+	    if (filename) {
 		this.saveLevel(filename);
 	    }
 	});
@@ -252,7 +267,6 @@ class LevelEditor {
 	for (const tri of this.graph.tris) {
 	    const dotSet = new Set(dots);
 	    tri.corners.forEach(corner => dotSet.add(corner));
-	    console.log(dotSet.size);
 	    if (dotSet.size == 3) {
 		return tri;
 	    }
@@ -381,36 +395,54 @@ class LevelEditor {
 
     click(x, y) {
 	const dot = this.addDot(x, y);
-	const originalTris = Array.from(this.graph.tris);
-	for (const tri of originalTris) {
-	    this.bisectIfOnTriEdge(dot, tri);
-	}
+	this.subdivideTrisOnDot(dot);
 	this.updateWarnings();
     }
 
-    bisectIfOnTriEdge(dot, tri) {
+    // Find a single tri edge that intersects with dot, and then divide all
+    // tri's that have that edge on that dot.
+    subdivideTrisOnDot(dot) {
 	const DOT_RADIUS = 7;
-	for (let i = 0; i < 3; i++) {
-	    const p1 = tri.corners[i];
-	    const p2 = tri.corners[(i+1) % 3];
-	    const p3 = tri.corners[(i+2) % 3];
-	    if (circleIntersectsLine(dot, DOT_RADIUS, p1, p2)) {
-		this.removeTri(tri);
-		this.addTri([dot, p1, p3], tri.color);
-		this.addTri([dot, p2, p3], tri.color);
-		this.history.at(-1).multistep = true;
-		this.history.at(-2).multistep = true;
-		this.history.at(-3).multistep = true;
-		return true;
+	for (const tri of this.graph.tris) {
+	    for (let i = 0; i < 3; i++) {
+		const p1 = tri.corners[i];
+		const p2 = tri.corners[(i+1) % 3];
+		const p3 = tri.corners[(i+2) % 3];
+		if (circleIntersectsLine(dot, DOT_RADIUS, p1, p2)) {
+		    this.subdivideAllTrisWithEdge(p1, p2, dot);
+		    return true;
+		}
 	    }
 	}
 	return false;
     }
 
-    // Click on triangle: divide it into 2 or 3 triangles.
+    subdivideAllTrisWithEdge(p1, p2, dot) {
+	const originalTris = Array.from(this.graph.tris);
+	for (const tri of p1.tris) {
+	    // If two of `tri`'s corners are `p1` and `p2`, then subdivide
+	    // that edge on `dot`.
+	    var dotSet = new Set([p1, p2]);
+	    tri.corners.forEach(c => dotSet.add(c));
+	    if (dotSet.size == 3) {
+		dotSet.delete(p1);
+		dotSet.delete(p2);
+		for (const p3 of dotSet) {
+		    this.removeTri(tri);
+		    this.addTri([dot, p1, p3], tri.color);
+		    this.addTri([dot, p2, p3], tri.color);
+		    this.history.at(-1).multistep = true;
+		    this.history.at(-2).multistep = true;
+		    this.history.at(-3).multistep = true;
+		}
+	    }
+	}
+    }
+
+    // Click on triangle: divide into smaller tris.
     clickTri(tri, x, y) {
 	const dot = this.addDot(x, y);
-	if (this.bisectIfOnTriEdge(dot, tri)) {
+	if (this.subdivideTrisOnDot(dot)) {
 	    return;
 	} else {
 	    const [p1, p2, p3] = tri.corners;

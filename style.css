@@ -41,13 +41,6 @@
     table.controls th {
 	padding: 0 10px;
     }
-    .controls .textInput td {
-	width: 100%;
-	padding-right: 20px;
-    }
-    .controls .textInput input {
-	width: 100%;
-    }
     #editorBackgroundOpacitySlider {
 	background-image: linear-gradient(to right, #eee, #000);
     }
