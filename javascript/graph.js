@@ -262,7 +262,8 @@ class Dot {
 	this.circle = graph.draw.circle().stroke({width: 2, color: 'black'});
 	this.text = graph.draw.plain()
 	    .font({anchor: 'middle', 'dominant-baseline': 'central'})
-	    .fill("white");
+	    .fill("white").plain('');
+	this.textString = '';
 	this.text.node.style = 'user-select: none';
 	this.text.hide();
 	this.move(x, y);
@@ -280,7 +281,7 @@ class Dot {
 
     show() {
 	this.circle.show();
-	if (this.maxEdges !== null) {
+	if (this.textString) {
 	    this.text.show();
 	}
     }
@@ -303,20 +304,23 @@ class Dot {
 
     updateEdgeCount() {
 	var n = this.numEdgesLeft();
-	this.text.show();
-	this.text.plain("" + n);
-	this.circle.fill('white');
-	this.text.fill('black');
-	this.circle.radius(5 + Math.max(n, 2));
 	
 	// Todo: hide if all triangles are visible (not if n==0)?
+	this.circle.radius(5 + Math.max(n, 2));
 	if (n == 0) {
-	    this.circle.hide();
-	    this.text.hide();
+	    this.hide();
 	} else {
-	    this.circle.show();
-	    this.text.show();
+	    this.setText(n.toString());
+	    this.show();
 	}
+    }
+
+    setText(s) {
+	this.text.show();
+	this.text.plain(s);
+	this.circle.fill('white');
+	this.text.fill('black');
+	this.textString = s;
     }
 
     move(x, y) {
@@ -358,7 +362,7 @@ class Tri{
 	
 	this.highlight = highlight;
 	this.highlightPoly = graph.draw.polygon().fill('none');
-	this.highlightPoly.stroke({width: 3, color: 'rgba(100,100,50,0.3)'});
+	this.highlightPoly.stroke({width: 3, color: 'rgba(200,50,50,0.5)'});
 	this.polygon.insertBefore(graph.layerMarkers.tris);
 	this.highlightPoly.insertBefore(graph.layerMarkers.tris);
 
@@ -402,8 +406,10 @@ class Tri{
 	const cornerPoints = corners.map(corner => [corner.x, corner.y]);
 	if (this.highlight) {
 	    this.highlightPoly.plot(this.getHighlightCorners());
+	    this.highlightPoly.show();
 	    this.polygon.plot(cornerPoints);
 	} else {
+	    this.highlightPoly.hide();
 	    this.polygon.plot(cornerPoints);
 	}
     }

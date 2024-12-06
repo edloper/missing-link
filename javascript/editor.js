@@ -46,6 +46,12 @@ const EDITOR_CONTROLS_HTML = `
 	  </td>
 	</tr>
 	<tr>
+	  <th align="right">Hide Dots</th>
+	  <td>
+	    <input type="checkbox" id="editorHideDots"/>
+	  </td>
+	</tr>
+	<tr>
 	  <th align="right">Background Color</th>
 	  <td>
 	    <div id="editorBackgroundColorPicker"></div>
@@ -54,8 +60,28 @@ const EDITOR_CONTROLS_HTML = `
       </table>
 `
 
+// History about an action the user took.  This is used to implement the "undo" action.
+//
+// Actions that can be undone:
+//   * addDot
+//   * moveDot
+//   * removeDot
+//   * addTri
+//   * removeTri
+//   * setBackgroundColor
+//   * setImage
+//   * deleteLevel
+//   * loadFromJson
+class EditorHistoryEvent {
+    constructor(action, args) {
+	this.action = action;
+	this.args = args;
+    }
+}
+
 class LevelEditor {
     constructor(container, width, height) {
+	this.history = [];
 	this.container = container
 	this.width = width
 	this.height = height
@@ -69,10 +95,11 @@ class LevelEditor {
 	this.image = null;
 	this.imageFilename = null;
 	this.imageOpacity = 100;
-	this.canvas = new ColorLookupCanvas(width, height, () => this.updateTriColors());
+	this.colorLookupCanvas = new ColorLookupCanvas(width, height, () => this.updateTriColors());
 	this.graph.setAlpha(1.0);
 	this.thumbnailPngDataUrl = null;
 	this.addControls();
+	this.history = [];
     }
 
     // Helper for the constructor -- add controls for the editor.
@@ -119,6 +146,9 @@ class LevelEditor {
 	    }
 	});
 	$("#editorDeleteGame").click(() => {
+	    this.history.push(new EditorHistoryEvent('deleteLevel', {
+		json: this.saveToJson()
+	    }));
 	    this.clear();
 	});
 	$("#editorBackgroundOpacitySlider").slider({
@@ -129,11 +159,105 @@ class LevelEditor {
 		this.setImageOpacity(ui.value/100.0);
 	    }
 	});
+	$("#editorHideDots").change(() => {
+	    if ($("#editorHideDots").is(':checked')) {
+		this.graph.dots.forEach(dot => dot.hide());
+	    } else {
+		this.graph.dots.forEach(dot => dot.show());
+	    }
+	})
 	new ColorPicker($("#editorBackgroundColorPicker")[0], {
 	    change: (color) => {
+		this.history.push(new EditorHistoryEvent('setBackgroundColor', {
+		    old: this.backgroundColor,
+		    new: color
+		}));
 		this.setBackgroundColor(color);
 	    }
 	});
+	document.addEventListener('keydown', event => {
+	    if ( (event.ctrlKey || event.metaKey) && event.key === 'z' ) {
+		this.undo();
+	    }
+	});
+    }
+
+    undo() {
+	if (this.history.length == 0) { return; }
+	const undoEvent = this.history.pop();
+	const historyCopy = Array.from(this.history);
+	const {action, args} = undoEvent;
+	if (action == "addDot") {
+	    var dot = this.findDot(args.x, args.y);
+	    if (dot) {
+		this.removeDot(dot);
+	    } else{
+		this.undoError("Cound not find dot");
+	    }
+	} else if (action == "removeDot") {
+	    this.addDot(args.x, args.y);
+	} else if (action == "moveDot") {
+	    var dot = this.findDot(args.destination.x, args.destination.y);
+	    if (dot) {
+		dot.move(args.source.x, args.source.y);
+	    } else{
+		this.undoError("Cound not find dot");
+	    }
+	} else if (action == "addTri") {
+	    var tri = this.findTri(args.corners);
+	    if (tri) {
+		this.removeTri(tri);
+	    } else{
+		this.undoError("Cound not find tri");
+	    }
+	} else if (action == "removeTri") {
+	    const corners = args.corners.map(p => this.findDot(p.x, p.y));
+	    this.addTri(corners, args.color);
+	} else if (action == "setBackgroundColor") {
+	    this.setBackgroundColor(args.old);
+	} else if (action == "setImage") {
+	    this.setImage(args.oldImage.path, args.oldImage.image);
+	    $("#editorLoadBackground").val('');
+	} else if (action == "deleteLevel") {
+	    console.log("undo delete -- Loading from json");
+	    this.loadFromJson(args.json);
+	} else if (action == "loadFromJson") {
+	    console.log("undo load -- Loading from json");
+	    this.loadFromJson(args.json);
+	}
+	this.history = historyCopy;
+	if (undoEvent.multistep) {
+	    // Used when adding a dot causes tri's to be subdivided.
+	    this.undo();
+	}
+    }
+
+    undoError(message) {
+	console.log("Undo error", message)
+    }
+
+    findDot(x, y) {
+	const dot = this.graph.closestDotTo(x, y);
+	const EPSILON = 1e-4;
+	if (dot && (Math.hypot(x-dot.x, y-dot.y) < EPSILON)) {
+	    return dot;
+	} else {
+	    console.log("Unable to find dot at", [x, y]);
+	}
+	return null;
+    }
+
+    findTri(corners) {
+	const dots = corners.map(c => this.findDot(c.x, c.y));
+	for (const tri of this.graph.tris) {
+	    const dotSet = new Set(dots);
+	    tri.corners.forEach(corner => dotSet.add(corner));
+	    console.log(dotSet.size);
+	    if (dotSet.size == 3) {
+		return tri;
+	    }
+	}
+	return null;
     }
 
     saveLevel(filename) {
@@ -194,7 +318,9 @@ class LevelEditor {
     }
     
     loadFromJson(jsonString) {
+	const oldLevel = this.saveToJson();
 	this.clear();
+	const historyCopy = Array.from(this.history);
 	const extras = this.graph.loadFromJson(
 	    jsonString,
 	    (x, y) => this.addDot(x, y),
@@ -205,6 +331,9 @@ class LevelEditor {
 	if (extras.backgroundColor) {
 	    this.setBackgroundColor(extras.backgroundColor);
 	}
+	this.updateWarnings();
+	this.history = historyCopy;
+	this.history.push(new EditorHistoryEvent('loadFromJson', {json: oldLevel}));
     }
 
     clear() {
@@ -220,48 +349,80 @@ class LevelEditor {
     addDot(x, y) {
 	const dot = this.graph.addDot(x, y);
 	dot.circle.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
+	dot.text.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
+	this.history.push(new EditorHistoryEvent('addDot', {x: x, y: y}));
 	return dot;
     }
 
+    removeDot(dot) {
+	dot.tris.forEach(tri => this.removeTri(tri));
+    	this.graph.removeDot(dot);
+	this.history.push(new EditorHistoryEvent('removeDot', {x: dot.x, y: dot.y}));
+	this.selection = this.selection.filter(obj => obj !== dot);
+	this.updateWarnings();
+    }
+
+    // Todo: remove color arg here?  We usually override it anyway?
     addTri(corners, color) {
 	const tri = this.graph.addTri(corners, color, /*highlight=*/ false);
 	tri.polygon.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, tri); });
 	this.updateTriColor(tri);
+	this.history.push(new EditorHistoryEvent('addTri', {
+	    corners: corners.map(c => ({x: c.x, y: c.y})), color: color}));
     }
 
     removeTri(tri) {
+	const cornerPoints = tri.corners.map(c => ({x: c.x, y: c.y}));
+	this.history.push(new EditorHistoryEvent('removeTri', {
+	    corners: cornerPoints, color: tri.color}));
     	this.graph.removeTri(tri);
-    }
-
-    removeDot(dot) {
-    	this.graph.removeDot(dot);
-	this.selection = this.selection.filter(obj => obj !== dot);
+	this.updateWarnings();
     }
 
     click(x, y) {
 	const dot = this.addDot(x, y);
-	this.subdivideTriangles(dot);
+	const originalTris = Array.from(this.graph.tris);
+	for (const tri of originalTris) {
+	    this.bisectIfOnTriEdge(dot, tri);
+	}
+	this.updateWarnings();
     }
 
-    subdivideTriangles(dot) {
+    bisectIfOnTriEdge(dot, tri) {
 	const DOT_RADIUS = 7;
-	const originalTris = Array.from(this.graph.tris);
-	console.log("===SUB===");
-	for (const tri of originalTris) {
-	    for (let i = 0; i < 3; i++) {
-		const p1 = tri.corners[i];
-		const p2 = tri.corners[(i+1) % 3];
-		const p3 = tri.corners[(i+2) % 3];
-		if (circleIntersectsLine(dot, DOT_RADIUS, p1, p2)) {
-		    console.log("Subdividing!", p1, p2, p3, dot);
-		    this.addTri([dot, p1, p3], "red");
-		    this.addTri([dot, p2, p3], "green");
-		    this.removeTri(tri);
-		    console.log(this.graph.tris);
-		}
+	for (let i = 0; i < 3; i++) {
+	    const p1 = tri.corners[i];
+	    const p2 = tri.corners[(i+1) % 3];
+	    const p3 = tri.corners[(i+2) % 3];
+	    if (circleIntersectsLine(dot, DOT_RADIUS, p1, p2)) {
+		this.removeTri(tri);
+		this.addTri([dot, p1, p3], tri.color);
+		this.addTri([dot, p2, p3], tri.color);
+		this.history.at(-1).multistep = true;
+		this.history.at(-2).multistep = true;
+		this.history.at(-3).multistep = true;
+		return true;
 	    }
 	}
-		    console.log(this.graph.tris);
+	return false;
+    }
+
+    // Click on triangle: divide it into 2 or 3 triangles.
+    clickTri(tri, x, y) {
+	const dot = this.addDot(x, y);
+	if (this.bisectIfOnTriEdge(dot, tri)) {
+	    return;
+	} else {
+	    const [p1, p2, p3] = tri.corners;
+	    this.removeTri(tri);
+	    this.addTri([dot, p1, p2], tri.color);
+	    this.addTri([dot, p2, p3], tri.color);
+	    this.addTri([dot, p1, p3], tri.color);
+	    this.history.at(-1).multistep = true;
+	    this.history.at(-2).multistep = true;
+	    this.history.at(-3).multistep = true;
+	    this.history.at(-4).multistep = true;
+	}
     }
 
     clickDot(dot) {
@@ -273,9 +434,10 @@ class LevelEditor {
             dot.setSelected(true);
 	    if (this.selection.length == 3) {
 		// Clicking 3 dots adds a triangle.
-		this.addTri(this.selection, {red: 0, green: 0, blue: 0});
+		this.addTri(this.selection, {red: 200, green: 200, blue: 200});
 		this.selection.forEach((dot) => dot.setSelected(false));
 		this.selection = [];
+		this.updateWarnings();
 	    }
 	}
     }
@@ -285,6 +447,7 @@ class LevelEditor {
     }
 
     startDragDot(dot, x, y) {
+	this.dotDragStartPoint = {x: dot.x, y: dot.y};
 	dot.tris.forEach(tri => tri.setAlpha(0.5));
     }
 
@@ -296,8 +459,75 @@ class LevelEditor {
     endDragDot(dot, x, y) {
 	dot.tris.forEach(tri => tri.setAlpha(1));
 	dot.tris.forEach(tri => this.updateTriColor(tri));
+	if (this.dotDragStartPoint) {
+	    this.history.push(new EditorHistoryEvent('moveDot', {
+		source: this.dotDragStartPoint,
+		destination: {x: dot.x, y: dot.y}
+	    }));
+	    this.dotDragStartPoint = null;
+	}
+	this.updateWarnings();
     }
 
+    // Warn about invalid conditions:
+    //  * Dot inside a triangle (incl. overlapping tri edges)
+    //  * Two triangles overlapping
+    updateWarnings() {
+	for (const dot of this.graph.dots) {
+	    this.clearDotWarning(dot);
+	}
+	for (const dot of this.graph.dots) {
+	    if (this.isDotInAnyTri(dot)) {
+		this.showDotWarning(dot);
+	    }
+	}
+	for (const tri1 of this.graph.tris) {
+	    for (const tri2 of this.graph.tris) {
+		if (tri1 !== tri2) {
+		    if (trianglesOverlap(tri1.corners, tri2.corners)) {
+			for (const dot of tri1.corners) {
+			    this.showDotWarning(dot);
+			}
+			for (const dot of tri2.corners) {
+			    this.showDotWarning(dot);
+			}
+		    }
+		}
+	    }
+        }
+    }
+
+    clearDotWarning(dot) {
+	dot.text.hide();
+    }
+
+    showDotWarning(dot) {
+	dot.setText("\u26A0");
+	dot.text.fill("red");
+    }
+
+    isDotInAnyTri(dot) {
+	const DOT_RADIUS = 7;
+	for (const tri of this.graph.tris) {
+	    if (tri.corners.some(corner => dot === corner)) {
+		continue;
+	    }
+	    if (isPointInTriangle(dot, tri.corners)) {
+		return true;
+	    }
+	    // Also check for edge overlap (with radius)
+	    for (let i = 0; i < 3; i++) {
+		const p1 = tri.corners[i];
+		const p2 = tri.corners[(i+1) % 3];
+		const p3 = tri.corners[(i+2) % 3];
+		if (circleIntersectsLine(dot, DOT_RADIUS, p1, p2)) {
+		    return true;
+		}
+	    }
+	}
+	return false;
+    }
+    
     rightClickTri(tri) {
 	this.removeTri(tri);
     }
@@ -307,21 +537,22 @@ class LevelEditor {
     }
 
     updateTriColor(tri) {
-	var color;
-	if (this.canvas.imageData === null) {
-	    color = {red: 0, green: 0, blue: 0}
-	} else {
-	    color = this.canvas.getTriColor(tri.corners);
-	}
-	tri.setColor(color);
+	tri.setColor(this.colorLookupCanvas.getTriColor(tri.corners));
     }
 
     setImage(path, filename) {
+	const oldPath = this.image ? this.image.attr('href') : null;
+	this.history.push(new EditorHistoryEvent('setImage', {
+	    oldImage: {path: oldPath, filename: this.imageFilename},
+	    newImage: {path: path, filename: filename}}));
 	this.imageFilename = filename;
 	if (this.image !== null) {
 	    this.image.remove();
 	}
-	if (path !== null) {
+	if (path === null) {
+	    this.image = null;
+	    this.colorLookupCanvas.clearImage();
+	} else {
 	    var image = this.draw.image(path);
 	    image.node.onerror = function() {
 		console.log("Unable to set image");
@@ -332,7 +563,7 @@ class LevelEditor {
 	    image.attr('preserveAspectRatio', 'xMidYMid slice');
 	    image.opacity(this.imageOpacity);
 	    this.image.insertBefore(this.graph.layerMarkers.image);
-	    this.canvas.setImage(path);
+	    this.colorLookupCanvas.setImage(path);
 	}
     }
 
@@ -353,6 +584,7 @@ class LevelEditor {
     }
 }
 
+// TODO: move this to a separate file??
 class ColorLookupCanvas {
     constructor(width, height, onLoadCallback) {
 	this.onLoadCallback = onLoadCallback;
@@ -360,6 +592,10 @@ class ColorLookupCanvas {
 	this.context = this.canvas.getContext('2d');
 	this.canvas.width = width;
 	this.canvas.height = height;
+	this.loaded = false;
+    }
+
+    clearImage() {
 	this.loaded = false;
     }
 
@@ -404,7 +640,7 @@ class ColorLookupCanvas {
 
     getTriColor(corners) {
 	if (!this.loaded) {
-	    return {red: 0, green: 0, blue: 0};
+	    return {red: 128, green: 128, blue: 128};
 	}
 	var red = 0;
 	var green = 0;

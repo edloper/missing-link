@@ -46,8 +46,8 @@ function isPointInTriangle(p, corners) {
     );
 }
 
-function trianglesOverap(corners1, corners2) {
-    const edges = [[0, 1], [1, 2], [2, 3]]
+function trianglesOverlap(corners1, corners2) {
+    const edges = [[0, 1], [1, 2], [2, 0]];
 
     for (const edge1 of edges) {
 	for (const edge2 of edges) {
@@ -71,13 +71,25 @@ function linesIntersect(p1, p2, p3, p4) {
     const y3 = p3.y;
     const y4 = p4.y;
     var det, gamma, lambda;
+    if ((x1 == x3 && y1 == y3 && x2 == x4 && y2 == y4) ||
+	(x1 == x4 && y1 == y4 && x2 == x3 && y2 == y2)) {
+	// Corner case: line doesn't intersect w/ itself.
+	return false; 
+    }
+
+    // Due to rounding, triangles that share an edge can sometimes be marked as
+    // overlapping unless we use this epsilon to make the line intersection test
+    // less strict:
+    const epsilon = 1e-3;
+    
     det = (x2 - x1) * (y4 - y3) - (x4 - x3) * (y2 - y1);
     if (det === 0) {
 	return false;
     } else {
 	lambda = ((y4 - y3) * (x4 - x1) + (x3 - x4) * (y4 - y1)) / det;
 	gamma = ((y1 - y2) * (x4 - x1) + (x2 - x1) * (y4 - y1)) / det;
-	return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+	return ((epsilon < lambda && lambda < 1-epsilon) &&
+		(epsilon < gamma && gamma < 1-epsilon));
     }
 };
 

@@ -183,7 +183,7 @@ class MouseHandler {
 		    this.game.clickDot(this.clickObj);
 		}
 		else if (this.game.clickTri && this.clickObj instanceof Tri) {
-		    this.game.clickTri(this.clickObj);
+		    this.game.clickTri(this.clickObj, point.x, point.y);
 		}
 		else if (this.game.clickEdge && this.clickObj instanceof Edge) {
 		    this.game.clickEdge(this.clickObj);
