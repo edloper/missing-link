@@ -370,19 +370,37 @@ class Game {
 	    const startDot = this.activeEdge.start;
 	    const edge = this.addEdge(startDot, endDot);
 	    this.history.push(new GameHistoryEvent("add", startDot, endDot));
+	    this.graph.removeEdge(this.activeEdge);
+	} else {
+	    this.graph.removeEdge(this.activeEdge, /*animate=*/ true);
 	}
-	this.graph.removeEdge(this.activeEdge);
 	this.activeEdge = null;
     }
 
-    okToConnectActiveEdgeTo(targetDot, x, y) {
-	return (
-	    (targetDot !== null) &&
-		(targetDot !== this.activeEdge.start) &&
-		(!this.dotsAreConnectedByEdge(this.activeEdge.start, targetDot)) &&
-		(targetDot.numEdgesLeft() > 0) &&
-		(Math.hypot(targetDot.x-x, targetDot.y-y) < 40)
-	);
+    okToConnectActiveEdgeTo(endDot, x, y) {
+	const startDot = this.activeEdge.start;
+	if (endDot === null) {
+	    return false;
+	}
+	if (endDot === startDot) {
+	    return false;
+	}
+	if (this.dotsAreConnectedByEdge(startDot, endDot)) {
+	    return false;
+	}
+	if (endDot.numEdgesLeft() <= 0) {
+	    return false;
+	}
+	if (Math.hypot(endDot.x-x, endDot.y-y) > 40) {
+	    return false;
+	}
+	for (const edge of this.graph.edges) {
+	    if (edge.end && linesIntersect(edge.start, edge.end, startDot, endDot)) {
+		console.log("Can't connect -- overlap edge!")
+		return false;
+	    }
+	}
+	return true;
     }
 
     dotsAreConnectedByEdge(dot1, dot2) {

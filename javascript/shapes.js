@@ -62,6 +62,7 @@ function trianglesOverlap(corners1, corners2) {
 
 // returns true if the line from p1->p2 intersects with p3->p4.
 function linesIntersect(p1, p2, p3, p4) {
+    console.log(p1, p2, p3, p4);
     const x1 = p1.x;
     const x2 = p2.x;
     const x3 = p3.x;
