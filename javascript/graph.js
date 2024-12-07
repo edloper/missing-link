@@ -117,12 +117,15 @@ class Graph {
 	const version = root.version ?? 1;
 	const width = this.draw.width();
 	const height = this.draw.height();
+	const scale = Math.min(width, height);
+	const dx = (width < height) ? 0 : (width-height)/2;
+	const dy = (height < width) ? 0 : (height-width)/2;
+	console.log(scale, dx, dy);
 	console.log("Loaded a level");
-	
 	this.clear();
 	for (const dot_json of root.dots) {
-	    const x = (version > 1) ? dot_json.x * width : dot_json.x;
-	    const y = (version > 1) ? dot_json.y * height : dot_json.y;
+	    const x = dot_json.x * scale + dx;
+	    const y = dot_json.y * scale + dy;
 	    const dot = (addDot ?? this.addDot)(x, y);
 	}
 	for (const tri_json of root.tris) {
