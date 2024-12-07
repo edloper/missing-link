@@ -53,7 +53,7 @@
 	position: absolute;
 	top: 0;
 	left: 0;
-	z-index: -10;
+	z-index: 0;
     }
     div.controls {
 	width: 100%;
@@ -62,6 +62,16 @@
 	position: absolute;
 	bottom: 0;
 	left: 0;
+	background: none;
+	border: none;
+	pointer-events: none;
+	box-shadow: none;
+    }
+    div.controls button {
+	pointer-events: auto;
+    }
+    div.controls #gameEasyMode {
+	pointer-events: auto;
     }
   </style>
 </head>
