@@ -1,6 +1,6 @@
 
 class Graph {
-    constructor(draw, options) {
+    constructor(draw, options = {}) {
 	this.draw = draw;
 	this.dots = []
 	this.tris = []
