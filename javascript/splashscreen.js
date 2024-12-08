@@ -1,16 +1,16 @@
-function drawSplashscreen() {
+function drawSplashscreen(initialTime=800, fadeTime=800) {
     const $splash = $("#splashscreen");
     $("#splashscreen").show();
-    var i = 1;
+    var i = 50;
     function animation() {
 	$splash.show();
-	$splash.css({opacity: i});
-	i -= 0.02;
+	$splash.css({opacity: i / 50});
+	i -= 1;
 	if (i <= 0) {
 	    $splash.hide();
 	} else {
-	    setTimeout(animation, 20);
+	    setTimeout(animation, fadeTime/50);
 	}
     }
-    setTimeout(animation, 1000);
+    setTimeout(animation, initialTime);
 }
