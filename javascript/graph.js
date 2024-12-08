@@ -269,11 +269,12 @@ class Dot {
 	this.clickCircle = graph.draw.circle();
 	this.clickCircle.fill('rgba(0,0,0,0)');
 	this.text = graph.draw.plain()
-	    .font({anchor: 'middle', 'dominant-baseline': 'central'})
+	    .font({anchor: 'middle', 'dominant-baseline': 'central', size: '14'})
 	    .fill("white").plain('');
 	this.textString = '';
 	this.text.node.style = 'user-select: none; pointer-events: none';
 	this.circle.node.style = 'user-select: none'
+	this.clickCircle.node.style = 'pointer-events: all';
 	this.text.hide();
 	this.move(x, y);
 	this.circle.radius(6);
