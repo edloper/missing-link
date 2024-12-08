@@ -6,6 +6,7 @@ class Graph {
 	this.tris = []
 	this.edges = [];
 	this.alpha = 0.5;
+	this.clickCircleRadius = 20;
 
 	// Place each object type before its layerMarker in the stacking order.
 	this.layerMarkers = {
@@ -13,6 +14,7 @@ class Graph {
 	    image: draw.rect(0, 0),
 	    tris: draw.rect(0, 0),
 	    edges: draw.rect(0, 0),
+	    dotClickCircles: draw.rect(0, 0),
 	    dots: draw.rect(0, 0),
 	    top: draw.rect(0, 0),
 	}
@@ -259,22 +261,28 @@ class Edge {
   */
 class Dot {
     constructor(graph, x, y) {
+	this.graph = graph;
 	this.isSelected = false;
 	this.tris = []  // Triangles that this dot is a corner for.
 	this.edges = []  // Edges connected to this dot.
 	this.circle = graph.draw.circle().stroke({width: 2, color: 'black'});
+	this.clickCircle = graph.draw.circle();
+	this.clickCircle.fill('rgba(0,0,0,0)');
 	this.text = graph.draw.plain()
 	    .font({anchor: 'middle', 'dominant-baseline': 'central'})
 	    .fill("white").plain('');
 	this.textString = '';
-	this.text.node.style = 'user-select: none';
+	this.text.node.style = 'user-select: none; pointer-events: none';
+	this.circle.node.style = 'user-select: none'
 	this.text.hide();
 	this.move(x, y);
 	this.circle.radius(6);
+	this.clickCircle.radius(graph.clickCircleRadius);
 	this.setSelected(false);
 	this.maxEdges = null;
 	this.circle.insertBefore(graph.layerMarkers.dots);
 	this.text.insertBefore(graph.layerMarkers.dots);
+	this.clickCircle.insertBefore(graph.layerMarkers.dotClickCircles);
     }
 
     hide() {
@@ -333,6 +341,9 @@ class Dot {
 	this.circle.radius(0);
 	this.circle.move(x, y);
 	this.circle.radius(radius);
+	this.clickCircle.radius(0);
+	this.clickCircle.move(x, y);
+	this.clickCircle.radius(this.graph.clickCircleRadius);
 	this.text.amove(x, y);
 	this.tris.forEach((tri) => tri.update());
     }
@@ -349,7 +360,13 @@ class Dot {
     destroy() {
 	this.circle.remove();
 	this.text.remove();
+	this.clickCircle.remove();
 	this.circle = null;
+    }
+
+    on(eventName, callback) {
+	this.circle.on(eventName, callback);
+	this.clickCircle.on(eventName, callback);
     }
 }
 

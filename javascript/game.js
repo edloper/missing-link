@@ -202,11 +202,8 @@ class Game {
 	    jsonString,
 	    (x, y) => {
 		const dot = this.graph.addDot(x, y);
-		dot.circle.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
-		dot.text.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
-		// Touch support.
-		dot.circle.on('touchstart', (e) => { this.mouseHandler.mouseDown(e, dot); });
-		dot.text.on('touchstart', (e) => { this.mouseHandler.mouseDown(e, dot); });
+		dot.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
+		dot.on('touchstart', (e) => { this.mouseHandler.mouseDown(e, dot); });
 		return dot;
 	    },
 	    (corners, color) => {
