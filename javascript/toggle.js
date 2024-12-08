@@ -2,6 +2,7 @@
 
 class ToggleButton {
     constructor(container, options = {}) {
+	this.onClickCallback = options.onClick ?? null;
 	this.height = options.height ?? 40;
 	this.width = options.width ?? 80;
 	this.margin = options.margin ?? 10;
@@ -46,7 +47,7 @@ class ToggleButton {
 	    display: 'inline-block',
 	    position: 'relative',
 	    cursor: 'pointer',
-	});
+ 	});
 	this.$circle.css({
 	    width: this.circleSize + 'px',
 	    height: this.circleSize + 'px',
@@ -56,6 +57,7 @@ class ToggleButton {
 	    left: this.circleMargin + 'px',
 	    top: this.circleMargin + 'px',
 	    'z-index': '10',
+	    'pointer-events': 'none',
 	});
 	this.$checkbox.css({
 	    position: 'absolute',
@@ -72,7 +74,7 @@ class ToggleButton {
 	    color: this.labelColor,
 	})
 
-	this.$checkbox.click(() => {
+	const clickCallback = () => {
 	    if (this.isChecked()) {
 		this.$toggle.css({background: this.CHECKED_BG});
 		this.$circle.css({
@@ -82,11 +84,14 @@ class ToggleButton {
 		this.$toggle.css({background: this.UNCHECKED_BG});
 		this.$circle.css({left: this.circleMargin + 'px'});
 	    }
-	});
+	    this.onClickCallback(this.isChecked());
+	}
+	this.$checkbox.mousedown(clickCallback);
+	this.$checkbox.on('touchstart', clickCallback);
     }
 
     onClick(callback) {
-	this.$checkbox.click(() => callback(this.isChecked()));
+	this.onClickCallback = callback;
     }
 
     isChecked() {
