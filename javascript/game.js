@@ -140,11 +140,11 @@ class Game {
 	});
 
 	$("#gameUndo")
-	    .mousedown(e => { this.undo(); e.preventDefault(); }, {passive: false} )
-	    .on('touchstart', e => { this.undo(); e.preventDefault(); }, {passive: false} );
+	    .mousedown(e => { this.undo(); e.preventDefault(); })
+	    .on('touchstart', e => { this.undo(); e.preventDefault(); });
 	$("#gameHint")
-	    .mousedown(e => { this.hint(); e.preventDefault(); }, {passive: false} )
-	    .on('touchstart', e => { this.hint(); e.preventDefault(); }, {passive: false} );
+	    .mousedown(e => { this.hint(); e.preventDefault(); })
+	    .on('touchstart', e => { this.hint(); e.preventDefault(); });
 	new ToggleButton($("#gameEasyMode"), {
 	    label: "Easy Mode",
 	    height: 30, width: 80,
