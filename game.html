@@ -21,24 +21,40 @@
   <script src="javascript/colorpicker.js"></script>
   <script src="javascript/level_urls.js"></script>
   <script>
-    const MIN_WIDTH = 500;
-    const MAX_WIDTH = Math.min(1000, window.innerHeight - 250);
     var game;
 
     $(function() {
+	var dw = 50;
+	var dh = 185;
 	var levelPickerContainer = document.getElementById('levelPicker');
 	var gameContainer = document.getElementById('game');
 	
-	// Adjust size.  Keep hight=width to preserve the aspect ratio of the game.
-	var naturalWidth = levelPickerContainer.offsetWidth - 50;
-	console.log("natural width", naturalWidth);
-	var width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, naturalWidth));
-	var height = width;
-
+	var width = window.innerWidth - dw;
+	var height = window.innerHeight - dh;
 	game = new Game(gameContainer, width, height);
 	const levelPicker = new LevelPicker(levelPickerContainer, game, LEVEL_URLS);
+	
+	window.addEventListener('resize', () => {
+	    game.resize(window.innerWidth - dw, window.innerHeight - dh);
+	});
     });
   </script>
+  <style>
+    body {
+	overflow: hidden;
+	touch-action: none;
+    }
+    div.levelTitle {
+	position: absolute;
+	pointer-events: none;
+	top: 80px;
+	left: 50%;
+	width: 80%;
+	transform: translate(-50%, 0);
+	z-index: 100;
+	text-shadow: 0px 0px 2px white;
+    }
+  </style>
 
   <!-- Uncomment this to debug touch input:  
   <script src="https://cdn.jsdelivr.net/gh/hammerjs/touchemulator@master/touch-emulator.js"></script>

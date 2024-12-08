@@ -47,8 +47,8 @@ class Game {
 	this.$container = $(container)
 	this.$container.append($("<div class='levelTitle'></div>"));
 	this.$title = this.$container.find(".levelTitle");
-	this.width = width
-	this.height = height
+	this.width = width  // used by mouse_controller.
+	this.height = height  // used by mouse_controller.
 	this.draw = SVG().addTo(container).size(width, height);
 	$(container).addClass('missingLinkGame');
 	this.setBackgroundColor({h: 0, s: 0, l: 80});
@@ -179,7 +179,13 @@ class Game {
 		}
 	    }
 	});
-	window.history.pushState({}, ''); 
+	window.history.pushState({}, ''); 	
+    }
+
+    resize(width, height) {
+	console.log("Resize", width, height);
+	this.$container.find(".controls").css({width: width});
+	this.draw.size(width, height);
     }
 
     loadFromPng(dataUrl) {

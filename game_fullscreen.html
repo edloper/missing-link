@@ -36,14 +36,16 @@
 	var levelPickerContainer = document.getElementById('levelPicker');
 	var gameContainer = document.getElementById('game');
 
-	// TODO: aspect ratio??
 	var width = window.innerWidth;
 	var height = window.innerHeight;
-
 	game = new Game(gameContainer, width, height);
 	const levelPicker = new LevelPicker(levelPickerContainer, game, LEVEL_URLS);
 
 	drawSplashscreen();
+    });
+
+    window.addEventListener('resize', () => {
+	game.resize(window.innerWidth, window.innerHeight);
     });
   </script>
 
@@ -83,6 +85,16 @@
     }
     div.controls #gameEasyMode {
 	pointer-events: auto;
+    }
+    div.levelTitle {
+	position: absolute;
+	pointer-events: none;
+	top: 25px;
+	left: 50%;
+	width: 80%;
+	transform: translate(-50%, 0);
+	z-index: 100;
+	text-shadow: 0px 0px 2px white;
     }
   </style>
 </head>
