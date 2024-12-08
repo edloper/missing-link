@@ -13,8 +13,8 @@ class Graph {
 	    bottom: draw.rect(0, 0),
 	    image: draw.rect(0, 0),
 	    tris: draw.rect(0, 0),
-	    edges: draw.rect(0, 0),
 	    dotClickCircles: draw.rect(0, 0),
+	    edges: draw.rect(0, 0),
 	    dots: draw.rect(0, 0),
 	    top: draw.rect(0, 0),
 	}
@@ -289,10 +289,12 @@ class Dot {
     hide() {
 	this.text.hide();
 	this.circle.hide();
+	this.clickCircle.hide();
     }
 
     show() {
 	this.circle.show();
+	this.clickCircle.show();
 	if (this.textString) {
 	    this.text.show();
 	}

@@ -207,10 +207,26 @@ class MouseHandler {
     }
 
     zoomOut() {
-	this.viewOffset.x = 0;
-	this.viewOffset.y = 0;
-	this.zoomLevel = 1.0;
-	this.updateViewbox();
+	console.log(this.viewOffset);
+	const steps = 50;
+	const duration = 1000;
+	const delta = Math.pow(1/this.zoomLevel, 1/steps);
+	var i = 0;
+	const animation = () => {
+	    i += 1;
+	    if (i > steps) {
+		this.viewOffset.x = 0;
+		this.viewOffset.y = 0;
+		this.zoomLevel = 1.0;
+		this.updateViewbox();
+	    } else {
+		const x = this.viewOffset.x + this.game.width / this.zoomLevel / 2;
+		const y = this.viewOffset.y + this.game.height / this.zoomLevel / 2;
+		this.zoomViewport({x: x, y: y}, delta);
+		setTimeout(animation, duration/steps);
+	    }
+	}
+	animation();
     }
     
     mouseWheel(e) {
