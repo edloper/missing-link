@@ -28,7 +28,13 @@ Confetti.prototype.update = function() {
 
 function drawConfetti(draw, numConfetti=300) {
     const confetti = [];
-    const viewbox = draw.viewbox()
+    const drawViewbox = draw.viewbox()
+    const viewbox = {
+	x: Math.min(0, drawViewbox.x),
+	y: Math.min(0, drawViewbox.y),
+	width: Math.max(draw.width(), drawViewbox.width),
+	height: Math.max(draw.height(), drawViewbox.height)
+    };
     for (let i = 0; i < numConfetti; i++) {
       confetti.push(new Confetti(
 	  draw,

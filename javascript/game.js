@@ -183,7 +183,6 @@ class Game {
     }
 
     resize(width, height) {
-	console.log("Resize", width, height);
 	this.$container.find(".controls").css({width: width});
 	this.draw.size(width, height);
     }

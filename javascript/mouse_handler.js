@@ -208,21 +208,28 @@ class MouseHandler {
 
     zoomOut() {
 	console.log(this.viewOffset);
-	const steps = 50;
-	const duration = 1000;
+	const steps = 80;
+	const duration = 700;
 	const delta = Math.pow(1/this.zoomLevel, 1/steps);
 	var i = 0;
 	const animation = () => {
 	    i += 1;
 	    if (i > steps) {
+		/*
 		this.viewOffset.x = 0;
 		this.viewOffset.y = 0;
 		this.zoomLevel = 1.0;
 		this.updateViewbox();
+		*/
 	    } else {
-		const x = this.viewOffset.x + this.game.width / this.zoomLevel / 2;
-		const y = this.viewOffset.y + this.game.height / this.zoomLevel / 2;
+		const w = this.game.width / this.zoomLevel
+		const h = this.game.height / this.zoomLevel;
+		const x = this.viewOffset.x + w / 2;
+		const y = this.viewOffset.y + h / 2;
+		const dx = 2 * (x - this.game.width/2) / steps;
+		const dy = 2 * (y - this.game.height/2) / steps;
 		this.zoomViewport({x: x, y: y}, delta);
+		this.moveViewport(dx, dy);
 		setTimeout(animation, duration/steps);
 	    }
 	}
