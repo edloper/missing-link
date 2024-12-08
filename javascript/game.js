@@ -140,16 +140,11 @@ class Game {
 	});
 
 	$("#gameUndo")
-	    .click(e => { this.undo(); e.preventDefault(); })
-	    .dblclick(e => { e.preventDefault(); })
-	    .on('pointerdown', e => { e.preventDefault(); })
-	    .on('stylusdown', e => { e.preventDefault(); });
+	    .mousedown(e => { this.undo(); e.preventDefault(); }, {passive: false} )
+	    .on('touchstart', e => { this.undo(); e.preventDefault(); }, {passive: false} );
 	$("#gameHint")
-	    .click(e => { this.hint(); e.preventDefault(); }, {passive: false} )
-	    .dblclick(e => { e.preventDefault(); }, {passive: false} )
-	    .on('touchstart', e => { e.preventDefault(); }, {passive: false} )
-	    .on('pointerdown', e => { e.preventDefault(); }, {passive: false} )
-	    .on('stylusdown', e => { e.preventDefault(); }, {passive: false} );
+	    .mousedown(e => { this.hint(); e.preventDefault(); }, {passive: false} )
+	    .on('touchstart', e => { this.hint(); e.preventDefault(); }, {passive: false} );
 	new ToggleButton($("#gameEasyMode"), {
 	    label: "Easy Mode",
 	    height: 30, width: 80,

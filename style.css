@@ -24,6 +24,7 @@
 	border-radius: 8px;
 	display: inline-block;
 	vertical-align: middle;
+	touch-action: none;
     }
     .actionButton img {
 	height: 40px;
