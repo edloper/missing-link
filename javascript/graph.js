@@ -1,12 +1,12 @@
 
 class Graph {
-    constructor(draw) {
+    constructor(draw, options) {
 	this.draw = draw;
 	this.dots = []
 	this.tris = []
 	this.edges = [];
 	this.alpha = 0.5;
-	this.clickCircleRadius = 20;
+	this.clickCircleRadius = options.clickCircleRadius ?? 20;
 
 	// Place each object type before its layerMarker in the stacking order.
 	this.layerMarkers = {
