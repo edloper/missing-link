@@ -145,10 +145,11 @@ class Game {
 	    .on('pointerdown', e => { e.preventDefault(); })
 	    .on('stylusdown', e => { e.preventDefault(); });
 	$("#gameHint")
-	    .click(e => { this.hint(); e.preventDefault(); })
-	    .dblclick(e => { e.preventDefault(); })
-	    .on('pointerdown', e => { e.preventDefault(); })
-	    .on('stylusdown', e => { e.preventDefault(); });
+	    .click(e => { this.hint(); e.preventDefault(); }, {passive: false} )
+	    .dblclick(e => { e.preventDefault(); }, {passive: false} )
+	    .on('touchstart', e => { e.preventDefault(); }, {passive: false} )
+	    .on('pointerdown', e => { e.preventDefault(); }, {passive: false} )
+	    .on('stylusdown', e => { e.preventDefault(); }, {passive: false} );
 	new ToggleButton($("#gameEasyMode"), {
 	    label: "Easy Mode",
 	    height: 30, width: 80,
