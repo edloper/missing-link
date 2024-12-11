@@ -7,12 +7,12 @@
 const GAME_CONTROLS_HTML = `
       <div class="controls">
 	<button id="gameUndo" class="actionButton">
-	  <img src="images/undo.png" title="Undo">
+	  <img src="images/undo.png" title="Shortcut: Ctrl-z">
           <div class="label">Undo</div>
         </button>
         <div id="gameEasyMode"></div>
 	<button id="gameHint" class="actionButton">
-	  <img src="images/hint.png" title="Hint">
+	  <img src="images/hint.png" title="Shortcut: h">
           <div class="label">Hint</div>
 	</button>
       </div>
@@ -158,7 +158,7 @@ class Game {
 	    if ( (event.ctrlKey || event.metaKey) && event.key === 'z' ) {
 		this.undo();
 	    }
-	    if ( event.altKey && event.key === 'h' ) {
+	    if ( event.key === 'h' ) {
 		this.hint();
 	    }
 	    if (event.key == 'Backspace') {
@@ -168,7 +168,7 @@ class Game {
 	    }
 	});
 	// Back button. 
-	this.$backButton = $("<button class='gameBackButton'></button>");
+	this.$backButton = $("<button class='gameBackButton' title='Shortcut: Backspace'></button>");
 	this.$container.append(this.$backButton);	
 	window.addEventListener('popstate', (event) => {
 	    if (event.state == null) {

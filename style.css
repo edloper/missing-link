@@ -140,6 +140,9 @@ h1 {
 .controls {
     background: #eee;
 }
+.controls {
+    white-space: nowrap;
+}
 .controls, svg.graph {
     display: block;
     border: 1px solid #888;

@@ -10,7 +10,7 @@ const EDITOR_CONTROLS_HTML = `
           <th rowspan="4">
             <button id="editorUndo" class="actionButton">
   	    <img src="images/undo.png" title="Undo">
-              <div class="label">Undo</div>
+              <div class="label" style="margin-left: -10px">Undo (ctrl-z)</div>
             </button>
           </th>
 	  <th align="right">Title</th>
@@ -20,7 +20,7 @@ const EDITOR_CONTROLS_HTML = `
 	  </td>
 	</tr>
 	<tr>
-	  <th align="right">Save&nbsp;Level</th>
+	  <th align="right">Save Level</th>
 	  <td style="width: 100%">
             <input type="text" id="editorSaveFileName"  style="width: 100%"
                placeholder="Filename">
@@ -30,13 +30,13 @@ const EDITOR_CONTROLS_HTML = `
           </td>
 	</tr>
 	<tr>
-	  <th align="right">Load&nbsp;Level</th>
+	  <th align="right">Load Level</th>
 	  <td colspan="2">
 	    <input type="file" id="editorLoad" accept="application/json">
 	  </td>
 	</tr>
 	<tr>
-	  <th align="right">Delete&nbsp;Level</th>
+	  <th align="right">Delete Level</th>
 	  <td colspan="2">
 	    <button id="editorDeleteGame">DELETE</button>
 	  </td>
@@ -44,7 +44,7 @@ const EDITOR_CONTROLS_HTML = `
       </table>
       <table class="controls">
 	<tr>
-	  <th align="right">Load&nbsp;Image</th>
+	  <th align="right">Load Image</th>
 	  <td>
 	    <input type="file" id="editorLoadBackground" accept="image/*">
 	  </td>
@@ -54,13 +54,13 @@ const EDITOR_CONTROLS_HTML = `
 	  </td>
 	</tr>
 	<tr>
-	  <th align="right">Image&nbsp;Opacity</th>
+	  <th align="right">Image Opacity</th>
 	  <td>
 	    <div id="editorBackgroundOpacitySlider" class="slider"></div>
 	  </td>
 	</tr>
 	<tr>
-	  <th align="right">Image&nbsp;Zoom</th>
+	  <th align="right">Image Zoom</th>
 	  <td>
 	    <div id="editorBackgroundZoomSlider" class="slider">
              <div id="editorBackgroundZoomHandle" class="ui-slider-handle"</div>
@@ -68,7 +68,7 @@ const EDITOR_CONTROLS_HTML = `
 	  </td>
 	</tr>
 	<tr>
-	  <th align="right">Hide&nbsp;Dots</th>
+	  <th align="right">Hide Dots</th>
 	  <td>
 	    <input type="checkbox" id="editorHideDots"/>
 	  </td>
