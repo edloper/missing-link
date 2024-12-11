@@ -303,7 +303,6 @@ class LevelEditor {
 		this.graph.dots.forEach(dot => dot.show());
 		if (this.image) { this.image.opacity(this.imageOpacity); }
 		this.thumbnailPngDataUrl = pngDataUrl;
-		console.log("Saving to " + filename);
 		const jsonString = this.saveToJson();
 		
 		// Download the json file.
@@ -327,13 +326,14 @@ class LevelEditor {
     }
 
     extrasForJson() {
-	return {
+	const extras = {
 	    imageFilename: this.imageFilename,
 	    backgroundColor: this.backgroundColor,
 	    title: $("#editorTitle").val(),
 	    thumbnail: this.thumbnailPngDataUrl,
 	    imageZoom: this.backgroundImageZoom,
 	};
+	return extras;
     }
 
     loadFromPng(dataUrl) {
@@ -358,10 +358,11 @@ class LevelEditor {
 	    jsonString,
 	    (x, y) => this.addDot(x, y),
 	    (corners, color) => this.addTri(corners, color));
-	this.backgroundImageZoom = extras.backgroundImageZoom ?? 1;
+	this.backgroundImageZoom = extras.imageZoom ?? 1;
 	$("#editorBackgroundZoomSlider").slider("value", this.backgroundImageZoom * 100);
 	if (extras.imageFilename) {
 	    this.setImage("backgrounds/"+extras.imageFilename,
+			  extras.imageFilename,
 			  this.backgroundImageZoom);
 	}
 	if (extras.backgroundColor) {
