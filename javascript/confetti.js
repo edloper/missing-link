@@ -63,12 +63,13 @@ function drawConfetti(draw, numConfetti=300) {
 }
 
 class Firework {
-    constructor(draw, x, y) {
+    constructor(draw, x, y, height) {
 	this.draw = draw;
 	this.x = x;
 	this.y = y;
-	this.dx = randomRange(-1, 1);
-	this.dy = randomRange(-7, -10);
+	this.scale = height/1000;
+	this.dx = randomRange(-1, 1) * this.scale;
+	this.dy = randomRange(-10, -14) * this.scale;
 	this.delay = randomRange(0, 50);
 	this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
 	this.radius = randomRange(1, 4);
@@ -84,7 +85,7 @@ class Firework {
 	}
 	this.x += this.dx;
 	this.y += this.dy;
-	this.dy += 0.1;
+	this.dy += 0.1 * this.scale;
 	if (this.dy > 0 && !this.exploded) {
 	    this.explode();
 	    this.rocket.remove();
@@ -98,7 +99,7 @@ class Firework {
     explode() {
 	this.exploded = true;
 	for (let i = 0; i < 30; i++) {
-	    this.particles.push(new FireworkParticle(this.draw, this.x, this.y, this.color));
+	    this.particles.push(new FireworkParticle(this.draw, this.x, this.y, this.scale, this.color));
 	}
     }
 
@@ -109,13 +110,13 @@ class Firework {
 }
 
 class FireworkParticle {
-    constructor(draw, x, y, color) {
+    constructor(draw, x, y, scale, color) {
 	this.x = x;
 	this.y = y;
 	this.color = color;
-	this.dx = randomRange(-3,3);
-	this.dy = randomRange(-3,2);
-	this.size = randomRange(1,3);
+	this.dx = randomRange(-3,3) * scale;
+	this.dy = randomRange(-3,2) * scale;
+	this.size = randomRange(1,3) * scale;
 	this.alpha = 1;
 	this.dot = draw.circle().fill(this.color).radius(this.size);
 	this.dot.move(this.x, this.y);
@@ -156,7 +157,8 @@ function drawFireworks(draw, numFireworks=50) {
       fireworks.push(new Firework(
 	  draw,
 	  viewbox.x + randomRange(0, viewbox.width),
-	  viewbox.y + viewbox.height));
+	  viewbox.y + viewbox.height,
+	  viewbox.height));
     }
     
     var animationStep = 0;
