@@ -7,7 +7,8 @@
 // (Might actually make it MORE fuzz?  Needs testing)
 function svgToPng(svgElement, filename = "svg", scale = 1) {
     const svgData = new XMLSerializer().serializeToString(svgElement);
-    const svgDataURL = "data:image/svg+xml;base64," + btoa(svgData);
+    const encodedSvg = encodeURIComponent(svgData);
+    const svgDataURL = "data:image/svg+xml;charset=utf-8," + encodedSvg;
     const width = svgElement.width.baseVal.value;
     const height = svgElement.height.baseVal.value;
     
@@ -16,25 +17,15 @@ function svgToPng(svgElement, filename = "svg", scale = 1) {
     ctx.imageSmoothingEnabled = false;
      
     const img = new Image();
+    $("body").append(img)
     const promise = new Promise((resolve, reject) => {
 	img.onload = function() {
 	    console.log("Loaded");
 	    canvas.width = width * scale;
 	    canvas.height = height * scale;
-	    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-	    if (scale != 1) {
-		const img2 = new Image();
-		img2.onload = function() {
-		    canvas.width = width;
-		    canvas.height = height;
-		    ctx.drawImage(img2, 0, 0, width, height);
-		    console.log("Got resized png");
-		    resolve(canvas.toDataURL('image/png', 1.0));
-		}
-		img2.src = canvas.toDataURL('image/png', 1.0);
-	    } else {
-		resolve(canvas.toDataURL('image/png', 1.0));
-	    }
+	    // -1 to remove border.
+	    ctx.drawImage(img, -1, -1, canvas.width, canvas.height);
+	    resolve(canvas.toDataURL('image/png', 1.0));
 	};
     });
     img.src = svgDataURL;

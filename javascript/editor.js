@@ -20,7 +20,7 @@ const EDITOR_CONTROLS_HTML = `
 	  </td>
 	</tr>
 	<tr>
-	  <th align="right">Save&nbsp;Game</th>
+	  <th align="right">Save&nbsp;Level</th>
 	  <td style="width: 100%">
             <input type="text" id="editorSaveFileName"  style="width: 100%"
                placeholder="Filename">
@@ -30,7 +30,7 @@ const EDITOR_CONTROLS_HTML = `
           </td>
 	</tr>
 	<tr>
-	  <th align="right">Load&nbsp;Game</th>
+	  <th align="right">Load&nbsp;Level</th>
 	  <td colspan="2">
 	    <input type="file" id="editorLoad" accept="application/json">
 	  </td>
@@ -44,23 +44,31 @@ const EDITOR_CONTROLS_HTML = `
       </table>
       <table class="controls">
 	<tr>
-	  <th align="right">Load Image</th>
+	  <th align="right">Load&nbsp;Image</th>
 	  <td>
 	    <input type="file" id="editorLoadBackground" accept="image/*">
 	  </td>
-	  <th align="right" rowspan="3">Background Color</th>
+	  <th align="right" rowspan="3" style="width:0">Background<br>Color</th>
 	  <td rowspan="3" width="0">
 	    <div id="editorBackgroundColorPicker"></div>
 	  </td>
 	</tr>
 	<tr>
-	  <th align="right">Image Opacity</th>
+	  <th align="right">Image&nbsp;Opacity</th>
 	  <td>
 	    <div id="editorBackgroundOpacitySlider" class="slider"></div>
 	  </td>
 	</tr>
 	<tr>
-	  <th align="right">Hide Dots</th>
+	  <th align="right">Image&nbsp;Zoom</th>
+	  <td>
+	    <div id="editorBackgroundZoomSlider" class="slider">
+             <div id="editorBackgroundZoomHandle" class="ui-slider-handle"</div>
+            </div>
+	  </td>
+	</tr>
+	<tr>
+	  <th align="right">Hide&nbsp;Dots</th>
 	  <td>
 	    <input type="checkbox" id="editorHideDots"/>
 	  </td>
@@ -102,19 +110,21 @@ class LevelEditor {
 	this.mouseHandler = new MouseHandler(this);
 	this.image = null;
 	this.imageFilename = null;
-	this.imageOpacity = 100;
+	this.imageOpacity = 50;
 	this.colorLookupCanvas = new ColorLookupCanvas(width, height, () => this.updateTriColors());
 	this.graph.setAlpha(1.0);
 	this.thumbnailPngDataUrl = null;
+	this.backgroundImageZoom = 1;
 	this.addControls();
 	this.history = [];
     }
 
     // Helper for the constructor -- add controls for the editor.
     addControls() {
+	const controlWidth = Math.max(this.width, 730);
 	const $controls = $(EDITOR_CONTROLS_HTML);
 	$(this.container).append($controls);
-	$(this.container).find(".controls").css({width: this.width});
+	$(this.container).find(".controls").css({width: controlWidth});
 	$("#editorUndo").click(e => { this.undo(); });
 	$("#editorSaveFileName").keypress((e) => {
 	    const filename = $("#editorSaveFileName").val();
@@ -169,10 +179,18 @@ class LevelEditor {
 	$("#editorBackgroundOpacitySlider").slider({
 	    min: 0,
 	    max: 100,
-	    value: 100,
+	    value: this.imageOpacity,
 	    change: (event, ui) => {
 		this.setImageOpacity(ui.value/100.0);
 	    }
+	});
+	$("#editorBackgroundZoomSlider").slider({
+	    min: 30,
+	    max: 300,
+	    value: 100,
+	    change: (event, ui) => {
+		this.setBackgroundImageZoom(ui.value/100.0);
+	    },
 	});
 	$("#editorHideDots").change(() => {
 	    if ($("#editorHideDots").is(':checked')) {
@@ -314,6 +332,7 @@ class LevelEditor {
 	    backgroundColor: this.backgroundColor,
 	    title: $("#editorTitle").val(),
 	    thumbnail: this.thumbnailPngDataUrl,
+	    imageZoom: this.backgroundImageZoom,
 	};
     }
 
@@ -339,8 +358,11 @@ class LevelEditor {
 	    jsonString,
 	    (x, y) => this.addDot(x, y),
 	    (corners, color) => this.addTri(corners, color));
+	this.backgroundImageZoom = extras.backgroundImageZoom ?? 1;
+	$("#editorBackgroundZoomSlider").slider("value", this.backgroundImageZoom * 100);
 	if (extras.imageFilename) {
-	    this.setImage("backgrounds/"+extras.imageFilename);
+	    this.setImage("backgrounds/"+extras.imageFilename,
+			  this.backgroundImageZoom);
 	}
 	if (extras.backgroundColor) {
 	    this.setBackgroundColor(extras.backgroundColor);
@@ -573,7 +595,7 @@ class LevelEditor {
 	tri.setColor(this.colorLookupCanvas.getTriColor(tri.corners));
     }
 
-    setImage(path, filename) {
+    setImage(path, filename, zoomLevel=1) {
 	const oldPath = this.image ? this.image.attr('href') : null;
 	this.history.push(new EditorHistoryEvent('setImage', {
 	    oldImage: {path: oldPath, filename: this.imageFilename},
@@ -588,15 +610,28 @@ class LevelEditor {
 	} else {
 	    var image = this.draw.image(path);
 	    image.node.onerror = function() {
-		console.log("Unable to set image");
+		console.log("Unable to set image", path, filename);
 		image.remove();
 	    }
 	    this.image = image;
-	    image.size(this.width, this.height);
+	    this.image.size(this.width, this.height);
 	    image.attr('preserveAspectRatio', 'xMidYMid slice');
 	    image.opacity(this.imageOpacity);
 	    this.image.insertBefore(this.graph.layerMarkers.image);
 	    this.colorLookupCanvas.setImage(path);
+	    this.setBackgroundImageZoom(zoomLevel);
+	}
+    }
+
+    setBackgroundImageZoom(zoomLevel) {
+	this.backgroundImageZoom = zoomLevel;
+	$("#editorBackgroundZoomHandle").text(zoomLevel * 100);
+	if (this.image) {
+	    const path = this.image.attr('href');
+	    this.image.size(this.width * zoomLevel, this.height * zoomLevel);
+	    this.image.center(this.width/2, this.height/2);
+	    this.colorLookupCanvas.setImage(path, zoomLevel);
+	    this.updateTriColors();
 	}
     }
 
@@ -632,7 +667,7 @@ class ColorLookupCanvas {
 	this.loaded = false;
     }
 
-    setImage(path) {
+    setImage(path, zoomLevel=1) {
 	var img = new Image();
 	img.src = path
 	
@@ -661,6 +696,11 @@ class ColorLookupCanvas {
 		dx = 0;
 		dy = -(height - canvasHeight) / 2;
 	    }
+	    context.clearRect(0, 0, width, height);
+	    dx += width * (1 - zoomLevel) / 2;
+	    dy += height * (1 - zoomLevel) / 2;
+	    width *= zoomLevel;
+	    height *= zoomLevel;
 	    context.drawImage(img, dx, dy, width, height);
 	    thisCanvas.imageData = context.getImageData(0, 0, canvasWidth, canvasHeight);
 	    thisCanvas.loaded = true;

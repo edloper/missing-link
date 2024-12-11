@@ -42,10 +42,10 @@ class LevelPicker {
 	    this.updateProgressBars();
 	});
 	this.saveCookie();
-	this.$resetConfirm = $("<div id='resetConfirm' title='Reset Progress?'>" +
+	this.$resetConfirm = $("<div class='resetConfirm' title='Reset Progress?'>" +
 			       "Are you sure?  This can not be undone.</div>");
 	this.$container.append(this.$resetConfirm)
-	this.$resetButton = $("<button id='resetProgress'>Reset Progress</button>");
+	this.$resetButton = $("<button class='resetProgress'>Reset Progress</button>");
 	this.$container.append(this.$resetButton)
 	this.$resetButton.click(() => {
 	    this.$resetConfirm.dialog({

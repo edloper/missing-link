@@ -191,7 +191,7 @@ h1 {
     
     
 }
-#resetProgress {
+.resetProgress {
     display: block;
     margin: 10px auto;
     color: #666;
@@ -200,7 +200,7 @@ h1 {
     border-radius: 5px;
     
 }
-#resetConfirm {
+.resetConfirm {
     display: none;
 }
 .levelProgressBar {
