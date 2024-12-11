@@ -184,14 +184,21 @@ class LevelEditor {
 		this.setImageOpacity(ui.value/100.0);
 	    }
 	});
-	$("#editorBackgroundZoomSlider").slider({
+	const $editorBackgroundZoomSlider = $("#editorBackgroundZoomSlider");
+	const $editorBackgroundZoomHandle = $("#editorBackgroundZoomHandle");
+	$editorBackgroundZoomSlider.slider({
 	    min: 30,
 	    max: 300,
 	    value: 100,
+	    step: 5,
 	    change: (event, ui) => {
 		this.setBackgroundImageZoom(ui.value/100.0);
 	    },
+	    slide: (event, ui) => {
+		$editorBackgroundZoomHandle.text(ui.value + "%");
+	    }
 	});
+	$editorBackgroundZoomHandle.text("100%");
 	$("#editorHideDots").change(() => {
 	    if ($("#editorHideDots").is(':checked')) {
 		this.graph.dots.forEach(dot => dot.hide());
@@ -626,7 +633,6 @@ class LevelEditor {
 
     setBackgroundImageZoom(zoomLevel) {
 	this.backgroundImageZoom = zoomLevel;
-	$("#editorBackgroundZoomHandle").text(zoomLevel * 100);
 	if (this.image) {
 	    const path = this.image.attr('href');
 	    this.image.size(this.width * zoomLevel, this.height * zoomLevel);

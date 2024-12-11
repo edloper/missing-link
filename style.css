@@ -264,3 +264,14 @@ table.modeSelect td {
 table.modeSelect img {
     width: 150px;
 }
+#editorBackgroundZoomSlider {
+    background: #abc;
+}
+#editorBackgroundZoomHandle {
+    width: 2.5em;
+    text-align: center;
+    color: #345;
+    border-color: #345;
+    font-size: 14px;
+    padding: 2px;
+}
