@@ -464,7 +464,11 @@ class Game {
 	// Zoom out.
 	this.mouseHandler.zoomOut();
 	this.levelCompleteShadow();
-	drawConfetti(this.draw);
+	if (Math.random() > 0.5) {
+	    drawConfetti(this.draw);
+	} else {
+	    drawFireworks(this.draw);
+	}
 	this.levelCompleteCallback();
     }
     
