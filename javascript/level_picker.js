@@ -11,7 +11,8 @@
 class LevelPicker {
     constructor(container, game, levelUrls) {
 	this.levelUrls = levelUrls;
-	this.loadCookie();
+	//this.clearCookies();
+	this.loadCookies();
 	this.game = game;
 	this.$container = $(container);
 	this.$grid = $("<div class='levelPickerGrid'>");
@@ -38,10 +39,10 @@ class LevelPicker {
 	this.game.setBackButtonCallback(() => {
 	    this.game.hide();
 	    this.show();
-	    this.saveCookie();
+	    this.saveCookies();
 	    this.updateProgressBars();
 	});
-	this.saveCookie();
+	this.saveCookies();
 	this.$resetConfirm = $("<div class='resetConfirm' title='Reset Progress?'>" +
 			       "Are you sure?  This can not be undone.</div>");
 	this.$container.append(this.$resetConfirm)
@@ -69,7 +70,7 @@ class LevelPicker {
     resetProgress() {
 	this.cookieData = {};
 	this.setCookieDefaults();
-	this.saveCookie();
+	this.saveCookies();
 	// Reset all thumbnails.
 	this.$container.find('.thumbnail').css({
 	    "background-image": "url('images/thumbnail.png')"
@@ -77,27 +78,15 @@ class LevelPicker {
 	this.updateProgressBars();
     }
 
-    loadCookie() {
+    loadCookies() {
 	const decodedCookie = decodeURIComponent(document.cookie);
-	const cookieName = "MissingLink=";
-	for (const cookie of decodedCookie.split(';')) {
-	    while (cookie.charAt(0) == ' ') {
-		cookie.cookie.substring(1);  // Trim leading space
-	    }
-	    if (cookie.indexOf(cookieName) == 0) {
-		const jsonString = cookie.substring(cookieName.length, cookie.length);
-		this.cookieData = JSON.parse(jsonString);
-		break;
-	    }
-	}
-	this.setCookieDefaults();
-    }
-
-    setCookieDefaults() {
 	this.cookieData ??= {};
 	this.cookieData.levels ??= {};
+
 	for (let i = 0; i < this.levelUrls.length; i++) {
 	    const levelUrl = this.levelUrls[i];
+	    const cookieName = "MissingLink_"+levelUrl;
+	    this.cookieData.levels[levelUrl] = this.loadCookie(decodedCookie, cookieName);
 	    this.cookieData.levels[levelUrl] ??= {};
 	    this.cookieData.levels[levelUrl].progress ??= {};
 	    this.cookieData.levels[levelUrl].progress.finished ??= false;
@@ -106,16 +95,54 @@ class LevelPicker {
 	    this.cookieData.levels[levelUrl].locked ??= true;
 	    this.cookieData.levels[levelUrl].index = i
 	}
+
+	
 	this.cookieData.levels[this.levelUrls[0]].locked = false;
     }
+
+    // Loads a cookie with a given name, given the decoded document.cookie.
+    loadCookie(decodedCookie, cookieName) {
+	const prefix = cookieName+"=";
+	for (let cookie of decodedCookie.split(';')) {
+	    while (cookie.charAt(0) == ' ') {
+		cookie = cookie.substring(1);  // Trim leading space
+	    }
+	    if (cookie.indexOf(prefix) == 0) {
+		const jsonString = cookie.substring(prefix.length, cookie.length);
+		console.log("Load cookie", cookieName, jsonString.length);
+		return JSON.parse(jsonString);
+	    }
+	}
+    }
+
+    saveCookies() {
+	this.levelUrls.forEach(levelUrl => this.saveLevelCookie(levelUrl));
+    }
+
+    saveLevelCookie(levelUrl) {
+	this.saveCookie("MissingLink_"+levelUrl,
+			this.cookieData.levels[levelUrl]);
+    }
     
-    saveCookie() {
-	const value = JSON.stringify(this.cookieData);
+    saveCookie(cookieName, jsonValue) {
+	const jsonString = JSON.stringify(jsonValue);
+	console.log("Save cookie", cookieName, jsonString.length);
 	const daysToExpire = 30;
 	const date = new Date();
 	date.setTime(date.getTime() + (daysToExpire * 24 * 60 * 60 * 1000));
 	const expires = "expires=" + date.toUTCString();
-	document.cookie = "MissingLink=" + value + ";" + expires + ";path=/";
+	document.cookie = cookieName + "=" + jsonString + ";" + expires + ";path=/";
+    }
+
+    clearCookies() { // For debugging
+	const cookies = document.cookie.split(";");
+	for (let i = 0; i < cookies.length; i++) {
+	    const cookie = cookies[i];
+	    const eqPos = cookie.indexOf("=");
+	    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+	    console.log("Clearing", name);
+	    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+	}
     }
     
     hide() {
@@ -159,7 +186,7 @@ class LevelPicker {
 			this.game.show();
 			this.game.setProgressCallback((progress) => {
 			    levelData.progress = progress;
-			    this.saveCookie();
+			    this.saveLevelCookie(url);
 			});
 			this.game.setLevelCompleteCallback(() => {
 			    // Display the thumbnail.
@@ -176,7 +203,7 @@ class LevelPicker {
 				this.cookieData.levels[nextUrl].locked = false;
 				this.updateProgressBars();
 			    }
-			    this.saveCookie();
+			    this.saveLevelCookie(url);
 			});
 			this.game.loadFromJson(value);
 			if (levelData.progress) {

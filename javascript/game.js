@@ -70,6 +70,7 @@ class Game {
 	this.graph.clear();
 	this.history = [];
 	this.mouseHandler.zoomOut();
+	this.$backButton.removeClass("finished");
     }
 
     saveProgress() {
@@ -169,8 +170,8 @@ class Game {
 	});
 	// Back button. 
 	this.$backButton = $("<button class='gameBackButton' title='Shortcut: Backspace'></button>");
-	this.$container.append(this.$backButton);	
-	window.addEventListener('popstate', (event) => {
+	this.$container.append(this.$backButton);
+	window.addEventListener('popstate', (event) => { // browser "back" button
 	    if (event.state == null) {
 		window.history.pushState({}, ''); 
 		if (this.backButtonCallback) {
@@ -470,6 +471,7 @@ class Game {
 	    drawFireworks(this.draw);
 	}
 	this.levelCompleteCallback();
+	this.$backButton.addClass("finished");
     }
     
     // The shadow indicates whether we've won this level or not.

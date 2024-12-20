@@ -147,7 +147,8 @@ class LevelEditor {
 		    // "data:application/json;base64,"
 		    const base64Data = reader.result.split(',')[1];
 		    const jsonString = atob(base64Data);
-		    this.loadFromJson(jsonString);
+		    this.loadFromJson(jsonString, file.name);
+		    $("#editorLoad").val('');
 		},
 		false,
 	    );
@@ -219,6 +220,27 @@ class LevelEditor {
 	    if ( (event.ctrlKey || event.metaKey) && event.key === 'z' ) {
 		this.undo();
 	    }
+	    else if ( (event.ctrlKey || event.metaKey) && event.key === '-' ) {
+		this.transformGraph(0.95);
+	    }
+	    else if ( (event.ctrlKey || event.metaKey) && event.key === '+' ) {
+		this.transformGraph(1/0.95);
+	    }
+	    else if ( (event.ctrlKey || event.metaKey) && event.key === 'ArrowLeft' ) {
+		this.transformGraph(1, -0.01*this.width, 0);
+	    }
+	    else if ( (event.ctrlKey || event.metaKey) && event.key === 'ArrowRight' ) {
+		this.transformGraph(1, 0.01*this.width, 0);
+	    }
+	    else if ( (event.ctrlKey || event.metaKey) && event.key === 'ArrowUp' ) {
+		this.transformGraph(1, 0, -0.01*this.height);
+	    }
+	    else if ( (event.ctrlKey || event.metaKey) && event.key === 'ArrowDown' ) {
+		this.transformGraph(1, 0, 0.01*this.height);
+	    } else {
+		return;  // Do not preventDefault for unhandled keys.
+	    }
+	    event.preventDefault();
 	});
     }
 
@@ -357,7 +379,7 @@ class LevelEditor {
 	    });
     }
     
-    loadFromJson(jsonString) {
+    loadFromJson(jsonString, filename=null) {
 	const oldLevel = this.saveToJson();
 	this.clear();
 	const historyCopy = Array.from(this.history);
@@ -366,14 +388,22 @@ class LevelEditor {
 	    (x, y) => this.addDot(x, y),
 	    (corners, color) => this.addTri(corners, color));
 	this.backgroundImageZoom = extras.imageZoom ?? 1;
-	$("#editorBackgroundZoomSlider").slider("value", this.backgroundImageZoom * 100);
+	$("#editorBackgroundZoomSlider").slider(
+	    "value", this.backgroundImageZoom * 100);
 	if (extras.imageFilename) {
 	    this.setImage("backgrounds/"+extras.imageFilename,
 			  extras.imageFilename,
 			  this.backgroundImageZoom);
 	}
+	if (filename) {
+	    $("#editorSaveFileName").val(filename);
+	}
 	if (extras.backgroundColor) {
 	    this.setBackgroundColor(extras.backgroundColor);
+	    // TODO: Update the color picker
+	}
+	if (extras.title) {
+	    $("#editorTitle").val(extras.title);
 	}
 	this.updateWarnings();
 	this.history = historyCopy;
@@ -647,6 +677,17 @@ class LevelEditor {
 	if (this.image) {
 	    this.image.opacity(opacity);
 	}
+    }
+
+    transformGraph(scale, dx=null, dy=null) {
+	dx ??= this.width * (1 - scale) / 2;
+	dy ??= this.height * (1 - scale) / 2;
+	console.log(scale, dx, dy);
+	this.graph.dots.forEach(dot => {
+	    dot.move(dot.x * scale + dx, dot.y * scale + dy);
+	});
+	this.updateWarnings();
+	this.updateTriColors();
     }
 
     setBackgroundColor(hsl) {
