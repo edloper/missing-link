@@ -78,6 +78,22 @@ class LevelPicker {
 	this.updateProgressBars();
     }
 
+    setCookieDefaults() {
+	this.cookieData ??= {};
+	this.cookieData.levels ??= {};
+	for (let i = 0; i < this.levelUrls.length; i++) {
+	    const levelUrl = this.levelUrls[i];
+	    this.cookieData.levels[levelUrl] ??= {};
+	    this.cookieData.levels[levelUrl].progress ??= {};
+	    this.cookieData.levels[levelUrl].progress.finished ??= false;
+	    this.cookieData.levels[levelUrl].progress.percentDone ??= 0;
+	    this.cookieData.levels[levelUrl].progress.edges ??= [];
+	    this.cookieData.levels[levelUrl].locked ??= true;
+	    this.cookieData.levels[levelUrl].index = i
+	}
+	this.cookieData.levels[this.levelUrls[0]].locked = false;
+    }
+
     loadCookies() {
 	const decodedCookie = decodeURIComponent(document.cookie);
 	this.cookieData ??= {};
@@ -87,17 +103,8 @@ class LevelPicker {
 	    const levelUrl = this.levelUrls[i];
 	    const cookieName = "MissingLink_"+levelUrl;
 	    this.cookieData.levels[levelUrl] = this.loadCookie(decodedCookie, cookieName);
-	    this.cookieData.levels[levelUrl] ??= {};
-	    this.cookieData.levels[levelUrl].progress ??= {};
-	    this.cookieData.levels[levelUrl].progress.finished ??= false;
-	    this.cookieData.levels[levelUrl].progress.percentDone ??= 0;
-	    this.cookieData.levels[levelUrl].progress.edges ??= [];
-	    this.cookieData.levels[levelUrl].locked ??= true;
-	    this.cookieData.levels[levelUrl].index = i
 	}
-
-	
-	this.cookieData.levels[this.levelUrls[0]].locked = false;
+	this.setCookieDefaults();
     }
 
     // Loads a cookie with a given name, given the decoded document.cookie.
@@ -109,7 +116,6 @@ class LevelPicker {
 	    }
 	    if (cookie.indexOf(prefix) == 0) {
 		const jsonString = cookie.substring(prefix.length, cookie.length);
-		console.log("Load cookie", cookieName, jsonString.length);
 		return JSON.parse(jsonString);
 	    }
 	}
@@ -126,7 +132,6 @@ class LevelPicker {
     
     saveCookie(cookieName, jsonValue) {
 	const jsonString = JSON.stringify(jsonValue);
-	console.log("Save cookie", cookieName, jsonString.length);
 	const daysToExpire = 30;
 	const date = new Date();
 	date.setTime(date.getTime() + (daysToExpire * 24 * 60 * 60 * 1000));
@@ -140,7 +145,6 @@ class LevelPicker {
 	    const cookie = cookies[i];
 	    const eqPos = cookie.indexOf("=");
 	    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-	    console.log("Clearing", name);
 	    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
 	}
     }
@@ -195,11 +199,8 @@ class LevelPicker {
 			    });
 			    // Unlock the next level.
 			    const index = levelData.index;
-			    console.log(index);
 			    if (index < (this.levelUrls.length - 1)) {
 				const nextUrl = this.levelUrls[index + 1];
-				console.log(nextUrl);
-				console.log(this.cookieData.levels[nextUrl].locked);
 				this.cookieData.levels[nextUrl].locked = false;
 				this.updateProgressBars();
 			    }
