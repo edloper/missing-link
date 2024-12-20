@@ -149,6 +149,7 @@ class LevelEditor {
 		    const jsonString = atob(base64Data);
 		    this.loadFromJson(jsonString, file.name);
 		    $("#editorLoad").val('');
+		    this.setImageOpacity(this.imageOpacity);
 		},
 		false,
 	    );
@@ -182,7 +183,7 @@ class LevelEditor {
 	    max: 100,
 	    value: this.imageOpacity,
 	    change: (event, ui) => {
-		this.setImageOpacity(ui.value/100.0);
+		this.setImageOpacity(ui.value);
 	    }
 	});
 	const $editorBackgroundZoomSlider = $("#editorBackgroundZoomSlider");
@@ -418,6 +419,9 @@ class LevelEditor {
 	    this.imageFilename = null;
 	    this.graph.setAlpha(1.0);
 	}
+	$("#editorLoad").val('');
+	$("#editorSaveFileName").val('');
+	$("#editorTitle").val('');
     }
 
     addDot(x, y) {
@@ -675,7 +679,7 @@ class LevelEditor {
     setImageOpacity(opacity) {
 	this.imageOpacity = opacity;
 	if (this.image) {
-	    this.image.opacity(opacity);
+	    this.image.opacity(opacity/100.0);
 	}
     }
 

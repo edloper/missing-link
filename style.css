@@ -74,9 +74,12 @@ table.controls th {
 .gameBackButton:active {
     background-color: #cfc;
 }
-.gameBackButton.finished {
-    background-color: #8f8;
-    box-shadow: 0px 0px 10px #8f8;
+.gameBackButton.flashing {
+    width: 42px;
+    height: 42px;
+    border: 2px solid #0f0;
+    background-color: #dfd;
+    box-shadow: 0px 0px 13px #080;
 }
 h1 {
     text-align: center;

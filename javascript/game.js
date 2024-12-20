@@ -63,6 +63,7 @@ class Game {
 	this.clear();
 	this.progressCallback = null;
 	this.backButtonCallback = null;
+	this.backButtonFlashingInterval = null;
     }
 
     clear() {
@@ -71,6 +72,7 @@ class Game {
 	this.history = [];
 	this.mouseHandler.zoomOut();
 	this.$backButton.removeClass("finished");
+	this.flashBackButton(false);
     }
 
     saveProgress() {
@@ -471,7 +473,7 @@ class Game {
 	    drawFireworks(this.draw);
 	}
 	this.levelCompleteCallback();
-	this.$backButton.addClass("finished");
+	this.flashBackButton(true);
     }
     
     // The shadow indicates whether we've won this level or not.
@@ -500,6 +502,27 @@ class Game {
 		clearInterval(intervalId);
 	    }
 	}, 20);
+    }
+
+    flashBackButton(isFlashing) {
+	if (this.backButtonFlashingInterval) {
+	    clearInterval(this.backButtonFlashingInterval);
+	    this.backButtonFlashingInterval = null;
+	}
+	if (isFlashing) {
+	    this.$backButton.addClass("flashing");
+	    var x = 128;
+	    var dx = 4;
+	    this.backButtonFlashingInterval = setInterval(()=> {
+		this.$backButton.css({"border-color": "rgb(0,"+x+",0)"});
+		x += dx;
+		if ((x > 254) || (x < 128)) {
+		    dx = -dx;
+		}
+	    }, 30);
+	} else {
+	    this.$backButton.removeClass("flashing");
+	}
     }
 }
 
