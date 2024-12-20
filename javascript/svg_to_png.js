@@ -17,7 +17,6 @@ function svgToPng(svgElement, filename = "svg", scale = 1) {
     ctx.imageSmoothingEnabled = false;
      
     const img = new Image();
-    $("body").append(img)
     const promise = new Promise((resolve, reject) => {
 	img.onload = function() {
 	    console.log("Loaded");
