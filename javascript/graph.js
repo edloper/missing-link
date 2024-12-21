@@ -6,6 +6,7 @@ class Graph {
 	this.tris = []
 	this.edges = [];
 	this.alpha = 0.5;
+	this.dotSize = options.dotSize ?? 1.0;
 	this.clickCircleRadius = options.clickCircleRadius ?? 20;
 
 	// Place each object type before its layerMarker in the stacking order.
@@ -265,11 +266,14 @@ class Dot {
 	this.isSelected = false;
 	this.tris = []  // Triangles that this dot is a corner for.
 	this.edges = []  // Edges connected to this dot.
-	this.circle = graph.draw.circle().stroke({width: 2, color: 'black'});
+	this.circle = graph.draw.circle().stroke({
+	    width: 2 * this.graph.dotSize,
+	    color: 'black'});
 	this.clickCircle = graph.draw.circle();
 	this.clickCircle.fill('rgba(0,0,0,0)');
 	this.text = graph.draw.plain()
-	    .font({anchor: 'middle', 'dominant-baseline': 'central', size: '14'})
+	    .font({anchor: 'middle', 'dominant-baseline': 'central',
+		   size: 14 * this.graph.dotSize})
 	    .fill("white").plain('');
 	this.textString = '';
 	this.text.node.style = 'user-select: none; pointer-events: none';
@@ -277,8 +281,8 @@ class Dot {
 	this.clickCircle.node.style = 'pointer-events: all';
 	this.text.hide();
 	this.move(x, y);
-	this.circle.radius(6);
-	this.clickCircle.radius(graph.clickCircleRadius);
+	this.circle.radius(6 * this.graph.dotSize);
+	this.clickCircle.radius(graph.clickCircleRadius * this.graph.dotSize);
 	this.setSelected(false);
 	this.maxEdges = null;
 	this.circle.insertBefore(graph.layerMarkers.dots);
@@ -320,7 +324,7 @@ class Dot {
 	var n = this.numEdgesLeft();
 	
 	// Todo: hide if all triangles are visible (not if n==0)?
-	this.circle.radius(5 + Math.max(n, 2));
+	this.circle.radius((5 + Math.max(n, 2)) * this.graph.dotSize);
 	if (n == 0) {
 	    this.hide();
 	} else {

@@ -48,8 +48,8 @@ const EDITOR_CONTROLS_HTML = `
 	  <td>
 	    <input type="file" id="editorLoadBackground" accept="image/*">
 	  </td>
-	  <th align="right" rowspan="3" style="width:0">Background<br>Color</th>
-	  <td rowspan="3" width="0">
+	  <th align="right" rowspan="4" style="width:0">Background<br>Color</th>
+	  <td rowspan="4" width="0">
 	    <div id="editorBackgroundColorPicker"></div>
 	  </td>
 	</tr>
