@@ -158,9 +158,7 @@ class Game {
 	    .on('touchstart', e => { this.undo(); e.preventDefault(); });
 	$("#gameHint")
 	    .mousedown(e => { this.startHint(); e.preventDefault(); })
-	    .mouseup(e => {this.endHint(); e.preventDefault(); })
 	    .on('touchstart', e => { this.startHint(); e.preventDefault(); })
-	    .on('touchend', e => { this.endHint(); e.preventDefault(); })
 	new ToggleButton($("#gameEasyMode"), {
 	    label: "Easy Mode",
 	    height: 30, width: 80,
@@ -296,16 +294,23 @@ class Game {
     }
 
     startHint() {
-	// If you hold down hint button, then do rapid-fire hints.
 	this.hint();
+	
+	// If you hold down hint button, then do rapid-fire hints.
+	this.holdingDownHint = true;
+	$(window).mouseup(e => {this.endHint(); })
+	$(window).on('touchend', e => { this.endHint(); })
 	const nextHint = () => {
-	    this.hint();
-	    this.hintTimeoutId = setTimeout(nextHint, 70);
+	    if (this.holdingDownHint) {
+		this.hint();
+		this.hintTimeoutId = setTimeout(nextHint, 70);
+	    }
 	}
-	setTimeout(nextHint, 1000);
+	this.hintTimeoutId = setTimeout(nextHint, 1000);
     }
 
     endHint() {
+	this.holdingDownHint = false;
 	if (this.hintTimeoutId) {
 	    clearTimeout(this.hintTimeoutId);
 	    this.hintTimeoutId = null;
