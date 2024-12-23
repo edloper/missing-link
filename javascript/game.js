@@ -157,8 +157,10 @@ class Game {
 	    .mousedown(e => { this.undo(); e.preventDefault(); })
 	    .on('touchstart', e => { this.undo(); e.preventDefault(); });
 	$("#gameHint")
-	    .mousedown(e => { this.hint(); e.preventDefault(); })
-	    .on('touchstart', e => { this.hint(); e.preventDefault(); });
+	    .mousedown(e => { this.startHint(); e.preventDefault(); })
+	    .mouseup(e => {this.endHint(); e.preventDefault(); })
+	    .on('touchstart', e => { this.startHint(); e.preventDefault(); })
+	    .on('touchend', e => { this.endHint(); e.preventDefault(); })
 	new ToggleButton($("#gameEasyMode"), {
 	    label: "Easy Mode",
 	    height: 30, width: 80,
@@ -291,6 +293,23 @@ class Game {
 	    }
 	}
 	return false;
+    }
+
+    startHint() {
+	// If you hold down hint button, then do rapid-fire hints.
+	this.hint();
+	const nextHint = () => {
+	    this.hint();
+	    this.hintTimeoutId = setTimeout(nextHint, 70);
+	}
+	setTimeout(nextHint, 1000);
+    }
+
+    endHint() {
+	if (this.hintTimeoutId) {
+	    clearTimeout(this.hintTimeoutId);
+	    this.hintTimeoutId = null;
+	}
     }
 
     hint(finishLevel = false) {
