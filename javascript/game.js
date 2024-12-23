@@ -81,19 +81,30 @@ class Game {
 	    const edges = this.graph.edges.filter(edge => edge.end);
 	    const numTrisShown = this.graph.tris.filter(tri => !tri.hidden).length;
 	    const totalTris = this.graph.tris.length;
-	    const progress = {
-		edges: edges.map(edge => [edge.start.index, edge.end.index]),
-		percentDone: Math.floor(100 * (numTrisShown/totalTris)),
-		finished: (numTrisShown == this.graph.tris.length),
+	    let progress = {}
+	    if (numTrisShown == this.graph.tris.length) {
+		progress.percentDone = 100;
+		progress.finished = true;
+		progress.edges = [];  // Do not record edges (max cookie length)
+	    } else {
+		progress.percentDone = Math.floor(100 * (numTrisShown/totalTris));
+		progress.finished = false;
+		progress.edges = edges.map(edge => [edge.start.index, edge.end.index]);
 	    };
 	    this.progressCallback(progress);
 	}
     }
 
     loadProgress(progress) {
-	for (const edge of progress.edges ?? []) {
-	    this.addEdge(this.graph.dots[edge[0]], this.graph.dots[edge[1]],
-			/*saveProgress=*/ false);
+	if (progress.finished) {
+	    console.log("loadProgress finished")
+	    this.hint(/*finishLevel=*/true);
+	} else {
+	    console.log("loadProgress unfinished");
+	    for (const edge of progress.edges ?? []) {
+		this.addEdge(this.graph.dots[edge[0]], this.graph.dots[edge[1]],
+			     /*saveProgress=*/ false);
+	    }
 	}
     }
 
@@ -161,14 +172,21 @@ class Game {
 	    if ( (event.ctrlKey || event.metaKey) && event.key === 'z' ) {
 		this.undo();
 	    }
-	    if ( event.key === 'h' ) {
+	    else if ( event.key === 'h' ) {
 		this.hint();
 	    }
-	    if (event.key == 'Backspace') {
+	    else if (event.key == 'Backspace') {
 		if (this.backButtonCallback) {
 		    this.backButtonCallback();
 		}
 	    }
+	    if ( (event.ctrlKey || event.metaKey) && event.key === 'ArrowRight' ) {
+		this.hint(/*finishLevel=*/true);
+	    }
+	    else {
+		return;  // Do not preventDefault for unhandled keys.
+	    }
+	    event.preventDefault();
 	});
 	// Back button. 
 	this.$backButton = $("<button class='gameBackButton' title='Shortcut: Backspace'></button>");
@@ -275,14 +293,16 @@ class Game {
 	return false;
     }
 
-    hint() {
+    hint(finishLevel = false) {
 	// Look for incorrect edges that the player added.
 	for (const dot of this.graph.dots) {
 	    for (const edge of dot.edges) {
 		if (!this.isCorrectEdge(edge)) {
-		    this.removeEdge(edge, true);
+		    this.removeEdge(edge, /*animate=*/ true);
 		    this.history.push(new GameHistoryEvent("remove", edge.start, edge.end));
-		    return;  // One hint at a time.
+		    if (!finishLevel) {
+			return;  // One hint at a time.
+		    }
 		}
 	    }
 	}
@@ -296,9 +316,11 @@ class Game {
 		    if (!((dot == corner) ||
 			  this.dotsAreConnectedByEdge(dot, corner))) {
 			const edge = this.addEdge(dot, corner);
-			edge.flash();
 			this.history.push(new GameHistoryEvent("add", dot, corner));
-			return;  // Just do one at a time.
+			if (!finishLevel) {
+			    edge.flash();
+			    return;  // Just do one at a time.
+			}
 		    }
 		}
 	    }

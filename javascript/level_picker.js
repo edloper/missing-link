@@ -11,7 +11,6 @@
 class LevelPicker {
     constructor(container, game, levelUrls) {
 	this.levelUrls = levelUrls;
-	//this.clearCookies();
 	this.loadCookies();
 	this.game = game;
 	this.$container = $(container);

@@ -207,7 +207,6 @@ class MouseHandler {
     }
 
     zoomOut() {
-	console.log(this.viewOffset);
 	const steps = 80;
 	const duration = 700;
 	const delta = Math.pow(1/this.zoomLevel, 1/steps);

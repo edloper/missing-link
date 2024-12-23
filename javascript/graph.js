@@ -123,8 +123,6 @@ class Graph {
 	const scale = Math.min(width, height);
 	const dx = (width < height) ? 0 : (width-height)/2;
 	const dy = (height < width) ? 0 : (height-width)/2;
-	console.log(scale, dx, dy);
-	console.log("Loaded a level");
 	this.clear();
 	for (const dot_json of root.dots) {
 	    const x = dot_json.x * scale + dx;
