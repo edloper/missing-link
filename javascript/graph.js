@@ -117,12 +117,13 @@ class Graph {
     
     loadFromJson(s, addDot, addTri) {
 	const root = JSON.parse(s);
+	const padding = root.padding ?? 20;
 	const version = root.version ?? 1;
-	const width = this.draw.width();
-	const height = this.draw.height();
+	const width = this.draw.width() - (2 * padding);
+	const height = this.draw.height() - (2 * padding);
 	const scale = Math.min(width, height);
-	const dx = (width < height) ? 0 : (width-height)/2;
-	const dy = (height < width) ? 0 : (height-width)/2;
+	const dx = ((width < height) ? 0 : (width-height)/2) + padding;
+	const dy = ((height < width) ? 0 : (height-width)/2) + padding;
 	this.clear();
 	for (const dot_json of root.dots) {
 	    const x = dot_json.x * scale + dx;
