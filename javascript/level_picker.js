@@ -108,6 +108,10 @@ class LevelPicker {
 	    prevLevelIsFinished = levelData.progress.finished;
 	}
 	this.setCookieDefaults();
+
+	const finishedLevels = this.loadCookie(decodedCookie, "MissingLink_finished");
+	// TODO: Actually use this cookie. (Still evaluating if I want to store it
+	// as ints or level urls, etc)
     }
 
     // Loads a cookie with a given name, given the decoded document.cookie.
@@ -126,6 +130,22 @@ class LevelPicker {
 
     saveCookies() {
 	this.levelUrls.forEach(levelUrl => this.saveLevelCookie(levelUrl));
+	this.saveFinishedLevelsCookie();
+    }
+
+    saveFinishedLevelsCookie() {
+	// Save a high-priority cookie with the list of finished levels.  It's
+	// more important to keep this than the actual progress details.  Though
+	// note that if we re-order levels then this can produce incorrect results.
+	var finishedLevels = [];
+	for (let i = 0; i < this.levelUrls.length; ++i) {
+	    const levelUrl = this.levelUrls[i];
+	    if (this.cookieData.levels[levelUrl].progress.finished) {
+		finishedLevels.push(i);
+	    }
+	}
+	this.saveCookie("MissingLink_finished",
+			finishedLevels, /*priority=*/ "High");
     }
 
     saveLevelCookie(levelUrl) {
@@ -133,13 +153,15 @@ class LevelPicker {
 			this.cookieData.levels[levelUrl]);
     }
     
-    saveCookie(cookieName, jsonValue) {
+    saveCookie(cookieName, jsonValue, priority="Medium") {
 	const jsonString = JSON.stringify(jsonValue);
 	const daysToExpire = 30;
 	const date = new Date();
 	date.setTime(date.getTime() + (daysToExpire * 24 * 60 * 60 * 1000));
-	const expires = "expires=" + date.toUTCString();
-	document.cookie = cookieName + "=" + jsonString + ";" + expires + ";path=/";
+	document.cookie = (cookieName + "=" + jsonString
+			   + ";expires=" + date.toUTCString()
+			   + ";Priority=" + priority 
+			   + ";path=/");
     }
 
     clearCookies() { // For debugging
@@ -194,21 +216,21 @@ class LevelPicker {
 			this.game.setProgressCallback((progress) => {
 			    levelData.progress = progress;
 			    this.saveLevelCookie(url);
-			});
-			this.game.setLevelCompleteCallback(() => {
-			    // Display the thumbnail.
-			    $thumbnail.css({
-				"background-image": "url('"+thumbnail+"')"
-			    });
-			    // Unlock the next level.
-			    const index = levelData.index;
-			    if (index < (this.levelUrls.length - 1)) {
-				const nextUrl = this.levelUrls[index + 1];
-				this.cookieData.levels[nextUrl].locked = false;
-				this.saveLevelCookie(nextUrl);
-				this.updateProgressBars();
+			    if (progress.finished) {
+				// Display the thumbnail.
+				$thumbnail.css({
+				    "background-image": "url('"+thumbnail+"')"
+				});
+				// Unlock the next level.
+				const index = levelData.index;
+				if (index < (this.levelUrls.length - 1)) {
+				    const nextUrl = this.levelUrls[index + 1];
+				    this.cookieData.levels[nextUrl].locked = false;
+				    this.saveLevelCookie(nextUrl);
+				    this.updateProgressBars();
+				}
 			    }
-			    this.saveLevelCookie(url);
+			    this.saveFinishedLevelsCookie();
 			});
 			this.game.loadFromJson(value);
 			if (levelData.progress) {
