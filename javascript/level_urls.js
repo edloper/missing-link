@@ -6,6 +6,8 @@ const LEVEL_URLS = [
     "levels/semifinal_lvl.json",
     "levels/am_finaldance.json",
     "levels/agnes_car.json",
+    //"levels/xmastree.json",
+    //"levels/bunny.json",
     //"levels/dog.json",
     //"levels/fox.json",
     //"levels/penguin.json",

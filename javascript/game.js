@@ -97,10 +97,8 @@ class Game {
 
     loadProgress(progress) {
 	if (progress.finished) {
-	    console.log("loadProgress finished")
 	    this.hint(/*finishLevel=*/true);
 	} else {
-	    console.log("loadProgress unfinished");
 	    for (const edge of progress.edges ?? []) {
 		this.addEdge(this.graph.dots[edge[0]], this.graph.dots[edge[1]],
 			     /*saveProgress=*/ false);
@@ -182,6 +180,7 @@ class Game {
 	    }
 	    if ( (event.ctrlKey || event.metaKey) && event.key === 'ArrowRight' ) {
 		this.hint(/*finishLevel=*/true);
+		this.saveProgress();
 	    }
 	    else {
 		return;  // Do not preventDefault for unhandled keys.
@@ -339,7 +338,8 @@ class Game {
 		    if (corner.numEdgesLeft() == 0) { continue; }
 		    if (!((dot == corner) ||
 			  this.dotsAreConnectedByEdge(dot, corner))) {
-			const edge = this.addEdge(dot, corner);
+			const edge = this.addEdge(dot, corner,
+						  /*saveProgress=*/ !finishLevel);
 			this.history.push(new GameHistoryEvent("add", dot, corner));
 			if (!finishLevel) {
 			    edge.flash();

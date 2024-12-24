@@ -38,10 +38,8 @@ class LevelPicker {
 	this.game.setBackButtonCallback(() => {
 	    this.game.hide();
 	    this.show();
-	    this.saveCookies();
 	    this.updateProgressBars();
 	});
-	this.saveCookies();
 	this.$resetConfirm = $("<div class='resetConfirm' title='Reset Progress?'>" +
 			       "Are you sure?  This can not be undone.</div>");
 	this.$container.append(this.$resetConfirm)
@@ -90,7 +88,7 @@ class LevelPicker {
 	    this.cookieData.levels[levelUrl].locked ??= true;
 	    this.cookieData.levels[levelUrl].index = i
 	}
-	this.cookieData.levels[this.levelUrls[0]].locked = false;
+       this.cookieData.levels[this.levelUrls[0]].locked = false;
     }
 
     loadCookies() {
@@ -98,10 +96,16 @@ class LevelPicker {
 	this.cookieData ??= {};
 	this.cookieData.levels ??= {};
 
+	var prevLevelIsFinished = true;
 	for (let i = 0; i < this.levelUrls.length; i++) {
 	    const levelUrl = this.levelUrls[i];
 	    const cookieName = "MissingLink_"+levelUrl;
-	    this.cookieData.levels[levelUrl] = this.loadCookie(decodedCookie, cookieName);
+	    const levelData = this.loadCookie(decodedCookie, cookieName);
+	    this.cookieData.levels[levelUrl] = levelData;
+	    if (prevLevelIsFinished) {
+		levelData.locked = false;
+	    }
+	    prevLevelIsFinished = levelData.progress.finished;
 	}
 	this.setCookieDefaults();
     }
@@ -201,6 +205,7 @@ class LevelPicker {
 			    if (index < (this.levelUrls.length - 1)) {
 				const nextUrl = this.levelUrls[index + 1];
 				this.cookieData.levels[nextUrl].locked = false;
+				this.saveLevelCookie(nextUrl);
 				this.updateProgressBars();
 			    }
 			    this.saveLevelCookie(url);
