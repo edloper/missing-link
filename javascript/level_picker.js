@@ -101,11 +101,13 @@ class LevelPicker {
 	    const levelUrl = this.levelUrls[i];
 	    const cookieName = "MissingLink_"+levelUrl;
 	    const levelData = this.loadCookie(decodedCookie, cookieName);
-	    this.cookieData.levels[levelUrl] = levelData;
-	    if (prevLevelIsFinished) {
-		levelData.locked = false;
+	    if (levelData) {
+		this.cookieData.levels[levelUrl] = levelData;
+		if (prevLevelIsFinished) {
+		    levelData.locked = false;
+		}
+		prevLevelIsFinished = levelData.progress.finished;
 	    }
-	    prevLevelIsFinished = levelData.progress.finished;
 	}
 	this.setCookieDefaults();
 
