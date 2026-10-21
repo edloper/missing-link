@@ -433,7 +433,7 @@ class LevelEditor {
     addDot(x, y) {
 	const dot = this.graph.addDot(x, y);
 	dot.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
-	dot.on('touchstart', (e) => { this.mouseHandler.mouseDown(e, dot); });
+	dot.on('touchstart', (e) => { this.mouseHandler.touchStart(e, dot); });
 	this.history.push(new EditorHistoryEvent('addDot', {x: x, y: y}));
 	return dot;
     }
@@ -450,7 +450,7 @@ class LevelEditor {
     addTri(corners, color) {
 	const tri = this.graph.addTri(corners, color, /*highlight=*/ false);
 	tri.polygon.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, tri); });
-	tri.polygon.on('touchstart', (e) => { this.mouseHandler.mouseDown(e, tri); });
+	tri.polygon.on('touchstart', (e) => { this.mouseHandler.touchStart(e, tri); });
 	this.updateTriColor(tri);
 	this.history.push(new EditorHistoryEvent('addTri', {
 	    corners: corners.map(c => ({x: c.x, y: c.y})), color: color}));

@@ -16,6 +16,8 @@ assertion to a normal passing regression test. Node reproductions live in
 
 ### R2 — High: dot touch handlers use mouse coordinates
 
+**Fixed:** Game dots and editor dots/triangles route touch events through the touch coordinate and pinch handlers.
+
 `javascript/game.js:266`, `javascript/editor.js:436`, `javascript/editor.js:453`
 
 Dot touchstart (and editor triangle touchstart) calls `mouseDown`, which reads

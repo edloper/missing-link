@@ -9,14 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R2', 'a dot touchstart uses touch coordinates in the game', () => {
-    const game = makeGame(load());
-    const dot = game.graph.dots[0];
-    dot.circle.events.touchstart({touches: [{clientX: 15, clientY: 25}],
-	preventDefault() {}, stopPropagation() {}});
-    assert.deepEqual(plain(game.mouseHandler.clickPoint), {x: 15, y: 25});
-});
-
 bug('R3', 'structurally invalid saved progress cannot break the next startup', async () => {
     const api = load();
     const code = 'ML0-' + btoa(JSON.stringify({levels: {a: {progress: 42}}}));

@@ -263,7 +263,7 @@ class Game {
 	    (x, y) => {
 		const dot = this.graph.addDot(x, y);
 		dot.on('mousedown', (e) => { this.mouseHandler.mouseDown(e, dot); });
-		dot.on('touchstart', (e) => { this.mouseHandler.mouseDown(e, dot); });
+		dot.on('touchstart', (e) => { this.mouseHandler.touchStart(e, dot); });
 		return dot;
 	    },
 	    (corners, color) => {

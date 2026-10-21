@@ -8,7 +8,6 @@ fixed.
 See `code_review.md` for reproduction details and repair status. Remaining
 reproduced issues:
 
-- R2: dot touch handlers use mouse coordinates.
 - R3: invalid saved data can prevent startup.
 - R6: failed level import destroys the current graph.
 - R4: locks are reconstructed incorrectly for sparse progress.

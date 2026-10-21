@@ -146,7 +146,7 @@ window.runTests = async function(group, report) {
 	    const dot = game.graph.dots[0];
 	    touchEvent(dot.circle.node, 'touchstart', screenPoint(game.draw, dot));
 	    equal([game.mouseHandler.clickPoint.x, game.mouseHandler.clickPoint.y], [dot.x, dot.y]);
-	}, 'R2');
+	}); // R2 regression
 	test('Hint during an active real SVG drag does not leave a broken edge', () => {
 	    game.startDragDot(game.graph.dots[0]);
 	    game.hint();
