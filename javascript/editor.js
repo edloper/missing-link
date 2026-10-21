@@ -274,6 +274,14 @@ class LevelEditor {
 	    } else{
 		this.undoError("Cound not find dot");
 	    }
+	} else if (action == "transformGraph") {
+	    // Resolve every destination before moving anything (positions can cross).
+	    const dots = args.positions.map(p => this.findDot(p.destination.x, p.destination.y));
+	    dots.forEach((dot, i) => {
+		if (dot) { dot.move(args.positions[i].source.x, args.positions[i].source.y); }
+	    });
+	    this.updateWarnings();
+	    this.updateTriColors();
 	} else if (action == "addTri") {
 	    var tri = this.findTri(args.corners);
 	    if (tri) {
@@ -718,9 +726,13 @@ class LevelEditor {
     transformGraph(scale, dx=null, dy=null) {
 	dx ??= this.width * (1 - scale) / 2;
 	dy ??= this.height * (1 - scale) / 2;
-	console.log(scale, dx, dy);
-	this.graph.dots.forEach(dot => {
-	    dot.move(dot.x * scale + dx, dot.y * scale + dy);
+	const positions = this.graph.dots.map(dot => ({
+	    source: {x: dot.x, y: dot.y},
+	    destination: {x: dot.x * scale + dx, y: dot.y * scale + dy},
+	}));
+	this.history.push(new EditorHistoryEvent('transformGraph', {positions: positions}));
+	this.graph.dots.forEach((dot, i) => {
+	    dot.move(positions[i].destination.x, positions[i].destination.y);
 	});
 	this.updateWarnings();
 	this.updateTriColors();

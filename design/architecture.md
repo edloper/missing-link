@@ -103,3 +103,4 @@ saving and `Game.resize()` all use it.
 - R12: Graph.loadFromJson calls its own addDot/addTri methods with the graph receiver when custom callbacks are omitted.
 - R13: Moving/resizing a dot retains its configured hit target radius multiplied by dotSize.
 - R14: Handled game shortcuts prevent browser defaults; game/editor shortcuts leave input, textarea, select and editable text targets alone.
+- R15: Each graph scale/translation records original and destination coordinates so Undo restores the transform and preserves earlier undo actions.

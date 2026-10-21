@@ -234,7 +234,15 @@ window.runTests = async function(group, report) {
 	    editor.transformGraph(.95);
 	    editor.undo();
 	    equal([editor.graph.dots[0].x, editor.graph.dots[0].y], [50, 50]);
-	}, 'R15');
+	}); // R15 regression
+	test('transform undo preserves the earlier dot-add undo action', () => {
+	    editor.addDot(200, 200);
+	    editor.transformGraph(.95);
+	    editor.undo();
+	    equal([editor.graph.dots[4].x, editor.graph.dots[4].y], [200, 200]);
+	    editor.undo();
+	    equal(editor.graph.dots.length, 4);
+	});
 	test('editor keyboard undo leaves a focused title input to its own text undo', () => {
 	    editor.addDot(200, 200);
 	    document.getElementById('editorTitle').focus();

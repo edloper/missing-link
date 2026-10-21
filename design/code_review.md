@@ -131,6 +131,8 @@ objects instead. Both errors have browser reproductions.
 
 ### R15 — Medium: graph transforms bypass and invalidate undo
 
+**Fixed:** Each graph scale/translation records original and destination coordinates so Undo restores the transform and preserves earlier undo actions.
+
 `javascript/editor.js:707`, `javascript/editor.js:248`
 
 Ctrl/Cmd +/- and arrow transforms mutate every dot without an undo event.
