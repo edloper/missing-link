@@ -26,7 +26,6 @@ const GAME_CONTROLS_HTML = `
 	  </td>
 	</tr>
       </table>
-    </div>
 `
 
 // History about an action the user took.  This is used to implement the "undo" action.
