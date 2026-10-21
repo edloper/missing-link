@@ -13,6 +13,10 @@ fixed.
   `xmastree.json` are commented out in `level_urls.js`.
 - `game.html` is an older version of `game_fullscreen.html` that nothing links
   to.
+- In `EDITOR_CONTROLS_HTML` (`javascript/editor.js`), the Image Zoom slider
+  handle's tag is missing its `>`:
+  `<div id="editorBackgroundZoomHandle" class="ui-slider-handle"</div>`.
+  Browsers usually recover from this, but it should be fixed.
 - `#gameLoadFromFile` (a "Load Game" file input in the game controls) is always
   hidden by CSS.
 - No background images are published, so the editor on the live site can't
