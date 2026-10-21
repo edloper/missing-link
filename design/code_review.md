@@ -1,8 +1,9 @@
 # Code review — 2026-10-20
 
 Reviewed the application scripts, all four pages, stylesheet, all 12 levels,
-local server and deployment configuration. This change adds tests and records
-findings; it deliberately leaves runtime behavior and published levels alone.
+local server and deployment configuration. The original review added tests without runtime changes. Fixed entries below
+now describe the subsequent repairs; their original explanations and source
+locations are retained as historical context. Published levels are unchanged.
 High priority means broken core interaction or possible loss of work/progress;
 medium means incorrect behavior in a supported workflow; low means limited
 helper/API usage or maintainability.
@@ -52,6 +53,8 @@ applying changes. Node reproduces loss of the game graph; a browser test
 reproduces loss of the editor graph and title.
 
 ### R1 — Medium: Hint/Undo can throw during an active drag
+
+**Fixed:** Hint and Undo cancel any unfinished drag before inspecting connected edges.
 
 `javascript/game.js:300`, `javascript/game.js:352`, `javascript/game.js:504`
 
@@ -255,7 +258,7 @@ These are inspection/data findings, not reproduced end-to-end failures.
   loads intermittently produced connection refusals in browser testing. The
   fixture loads scripts sequentially; app/server behavior is unchanged.
 
-## Validation
+## Original review validation
 
 - 59 Node baseline tests pass, including all published and draft levels.
 - All 20 strict Node known-bug reproductions fail as expected.

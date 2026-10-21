@@ -9,21 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R1', 'Hint while drawing an unfinished edge does not throw', () => {
-    const game = makeGame(load());
-    game.startDragDot(game.graph.dots[0]);
-    game.hint();
-    assert.ok(game.graph.edges.every(edge => edge.start));
-});
-
-bug('R1', 'Undo while drawing from a dot with history does not throw', () => {
-    const game = makeGame(load());
-    game.hint();
-    game.startDragDot(game.graph.dots[0]);
-    game.undo();
-    assert.equal(game.history.length, 0);
-});
-
 bug('R2', 'a dot touchstart uses touch coordinates in the game', () => {
     const game = makeGame(load());
     const dot = game.graph.dots[0];

@@ -298,6 +298,7 @@ class Game {
     }
 
     undo() {
+	this.cancelDrag();
 	if (this.history.length == 0) { return; }
 	const undoEvent = this.history.pop();
 	const action = undoEvent.action;
@@ -350,6 +351,7 @@ class Game {
     }
 
     hint(finishLevel = false) {
+	this.cancelDrag();
 	// Look for incorrect edges that the player added.
 	for (const dot of this.graph.dots) {
 	    for (const edge of dot.edges) {

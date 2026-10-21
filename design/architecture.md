@@ -6,7 +6,7 @@ to reveal a picture made of triangles. A desktop level editor makes the levels.
 
 The dependency-free Node suite and browser integration runner are described in
 `testing.md`. `code_review.md` records the 2026-10-20 review and executable
-known-bug reproductions; runtime fixes are intentionally deferred.
+regressions and repair status. Published levels and progress keys are unchanged.
 
 ## Pages
 
@@ -86,3 +86,7 @@ saving and `Game.resize()` all use it.
   opened from the Home Screen, which have their own separate storage. On
   iPhone and iPad, the level picker shows a dismissible tip about this; the
   hidden state is stored under `MissingLink_hideHomeScreenTip`.
+
+## Reviewed bug fixes
+
+- R1: Hint and Undo cancel any unfinished drag before inspecting connected edges.

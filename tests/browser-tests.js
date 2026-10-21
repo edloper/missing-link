@@ -151,7 +151,7 @@ window.runTests = async function(group, report) {
 	    game.startDragDot(game.graph.dots[0]);
 	    game.hint();
 	    ok(game.graph.edges.every(edge => edge.end), 'Hint should finish or cancel the drag');
-	}, 'R1');
+	}); // R1 regression
 	test('handled game shortcuts prevent the browser default action', () => {
 	    const event = new KeyboardEvent('keydown', {key: 'z', ctrlKey: true, cancelable: true});
 	    document.dispatchEvent(event);
