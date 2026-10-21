@@ -9,6 +9,7 @@
   */
 
 const PROGRESS_STORAGE_KEY = "MissingLink_progress";
+const HIDE_HOME_SCREEN_TIP_KEY = "MissingLink_hideHomeScreenTip";
 
 // Save codes are "ML1-" followed by the progress json, deflate-compressed
 // and base64-encoded ("ML0-" if the browser can't compress).
@@ -106,6 +107,7 @@ class LevelPicker {
 	this.$saveCodeButton.click(() => this.showSaveCodeDialog());
 	this.$resetButton = $("<button class='levelPickerButton'>Reset Progress</button>");
 	this.$buttons.append(this.$resetButton)
+	this.addHomeScreenTip();
 	this.$resetButton.click(() => {
 	    this.$resetConfirm.dialog({
 		resizable: false,
@@ -123,6 +125,35 @@ class LevelPicker {
 		}
 	    })
 	});
+    }
+
+    // On iPhone and iPad, Safari deletes a site's saved data if the site isn't
+    // used for 7 days, but not for sites added to the Home Screen.  Suggest
+    // that (unless we're already running from the Home Screen).
+    addHomeScreenTip() {
+	const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+		       (navigator.platform == "MacIntel" && navigator.maxTouchPoints > 1));
+	const isStandalone = (navigator.standalone === true ||
+			      window.matchMedia("(display-mode: standalone)").matches);
+	if (!isIOS || isStandalone ||
+	    localStorage.getItem(HIDE_HOME_SCREEN_TIP_KEY)) {
+	    return;
+	}
+	const $tip = $(
+	    "<div class='homeScreenTip'>" +
+	    "<button class='closeTip' title='Hide this tip'>&times;</button>" +
+	    "<b>Tip:</b> Safari may erase your progress if you don't play for a " +
+	    "week.  To keep it, tap Share, then \"Add to Home Screen\", and play " +
+	    "from the Home Screen.  (The Home Screen game starts fresh: use " +
+	    "Save Code to bring your progress with you.)" +
+	    "</div>");
+	$tip.find(".closeTip").click(() => {
+	    try {
+		localStorage.setItem(HIDE_HOME_SCREEN_TIP_KEY, "1");
+	    } catch (e) {}
+	    $tip.remove();
+	});
+	this.$container.append($tip);
     }
 
     // Shows a dialog where the player can copy a "save code" with their
