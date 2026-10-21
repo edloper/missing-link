@@ -416,9 +416,11 @@ class LevelEditor {
 	this.graph.clear();
 	if (this.image) {
 	    this.image.remove();
+	    this.image = null;
 	    this.imageFilename = null;
 	    this.graph.setAlpha(1.0);
 	}
+	this.colorLookupCanvas.clearImage();
 	$("#editorLoad").val('');
 	$("#editorSaveFileName").val('');
 	$("#editorTitle").val('');
@@ -634,6 +636,9 @@ class LevelEditor {
     }
 
     updateTriColor(tri) {
+	if (!this.colorLookupCanvas.loaded && tri.color) {
+	    return;  // No background image to sample: keep the current color.
+	}
 	tri.setColor(this.colorLookupCanvas.getTriColor(tri.corners));
     }
 
@@ -652,6 +657,9 @@ class LevelEditor {
 	} else {
 	    var image = this.draw.image(path);
 	    image.node.onerror = () => {
+		if (this.image !== image) {
+		    return;  // This image has since been replaced.
+		}
 		// Personal photos are kept in backgrounds/personal/, which is
 		// not published.  Levels refer to them by filename only.
 		const personalPath = "backgrounds/personal/" + filename;
@@ -726,6 +734,7 @@ class ColorLookupCanvas {
 
     clearImage() {
 	this.loaded = false;
+	this.pendingImage = null;
     }
 
     setImage(path, zoomLevel=1) {
@@ -737,8 +746,12 @@ class ColorLookupCanvas {
 	var canvasWidth = this.canvas.width;
 	var canvasHeight = this.canvas.height;
 	this.loaded = false;
+	this.pendingImage = img;
 
 	img.onload = function() {
+	    if (thisCanvas.pendingImage !== img) {
+		return;  // A different image was set (or cleared) since.
+	    }
 	    // Position the image so it matches up with
 	    // preserveAspectRatio='xMidYMid slice' (which is what
 	    // we use for the svg image).
