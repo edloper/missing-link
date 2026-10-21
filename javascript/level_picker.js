@@ -8,10 +8,12 @@
   
   */
 
+const PROGRESS_STORAGE_KEY = "MissingLink_progress";
+
 class LevelPicker {
     constructor(container, game, levelUrls) {
 	this.levelUrls = levelUrls;
-	this.loadCookies();
+	this.load();
 	this.game = game;
 	this.$container = $(container);
 	this.$grid = $("<div class='levelPickerGrid'>");
@@ -65,9 +67,9 @@ class LevelPicker {
     }
 
     resetProgress() {
-	this.cookieData = {};
-	this.setCookieDefaults();
-	this.saveCookies();
+	this.savedData = {};
+	this.setDefaults();
+	this.save();
 	// Reset all thumbnails.
 	this.$container.find('.thumbnail').css({
 	    "background-image": "url('images/thumbnail.png')"
@@ -75,45 +77,77 @@ class LevelPicker {
 	this.updateProgressBars();
     }
 
-    setCookieDefaults() {
-	this.cookieData ??= {};
-	this.cookieData.levels ??= {};
+    setDefaults() {
+	this.savedData ??= {};
+	this.savedData.levels ??= {};
 	for (let i = 0; i < this.levelUrls.length; i++) {
 	    const levelUrl = this.levelUrls[i];
-	    this.cookieData.levels[levelUrl] ??= {};
-	    this.cookieData.levels[levelUrl].progress ??= {};
-	    this.cookieData.levels[levelUrl].progress.finished ??= false;
-	    this.cookieData.levels[levelUrl].progress.percentDone ??= 0;
-	    this.cookieData.levels[levelUrl].progress.edges ??= [];
-	    this.cookieData.levels[levelUrl].locked ??= true;
-	    this.cookieData.levels[levelUrl].index = i
+	    this.savedData.levels[levelUrl] ??= {};
+	    this.savedData.levels[levelUrl].progress ??= {};
+	    this.savedData.levels[levelUrl].progress.finished ??= false;
+	    this.savedData.levels[levelUrl].progress.percentDone ??= 0;
+	    this.savedData.levels[levelUrl].progress.edges ??= [];
+	    this.savedData.levels[levelUrl].locked ??= true;
+	    this.savedData.levels[levelUrl].index = i
 	}
-       this.cookieData.levels[this.levelUrls[0]].locked = false;
+       this.savedData.levels[this.levelUrls[0]].locked = false;
     }
 
-    loadCookies() {
-	const decodedCookie = decodeURIComponent(document.cookie);
-	this.cookieData ??= {};
-	this.cookieData.levels ??= {};
+    // Progress is saved in localStorage.  (Older versions used one cookie
+    // per level, but cookies expire and are limited to about 4KB, which is
+    // too small for the edges of a big level.)
+    load() {
+	let levels = null;
+	try {
+	    levels = JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY))?.levels;
+	} catch (e) {
+	    console.error("Unable to load progress", e);
+	}
+	const fromCookies = !levels;
+	if (fromCookies) {
+	    levels = this.loadLevelsFromCookies();
+	}
+	this.savedData = {levels: levels};
 
 	var prevLevelIsFinished = true;
 	for (let i = 0; i < this.levelUrls.length; i++) {
-	    const levelUrl = this.levelUrls[i];
-	    const cookieName = "MissingLink_"+levelUrl;
-	    const levelData = this.loadCookie(decodedCookie, cookieName);
+	    const levelData = levels[this.levelUrls[i]];
 	    if (levelData) {
-		this.cookieData.levels[levelUrl] = levelData;
 		if (prevLevelIsFinished) {
 		    levelData.locked = false;
 		}
-		prevLevelIsFinished = levelData.progress.finished;
+		prevLevelIsFinished = levelData.progress?.finished ?? false;
 	    }
 	}
-	this.setCookieDefaults();
+	this.setDefaults();
 
-	const finishedLevels = this.loadCookie(decodedCookie, "MissingLink_finished");
-	// TODO: Actually use this cookie. (Still evaluating if I want to store it
-	// as ints or level urls, etc)
+	if (fromCookies && Object.keys(levels).length > 0 && this.save()) {
+	    this.deleteOldCookies();
+	}
+    }
+
+    save() {
+	try {
+	    localStorage.setItem(PROGRESS_STORAGE_KEY,
+				 JSON.stringify({levels: this.savedData.levels}));
+	    return true;
+	} catch (e) {
+	    console.error("Unable to save progress", e);
+	    return false;
+	}
+    }
+
+    // Loads progress saved in cookies by older versions of the game.
+    loadLevelsFromCookies() {
+	const decodedCookie = decodeURIComponent(document.cookie);
+	const levels = {};
+	for (const levelUrl of this.levelUrls) {
+	    const levelData = this.loadCookie(decodedCookie, "MissingLink_"+levelUrl);
+	    if (levelData) {
+		levels[levelUrl] = levelData;
+	    }
+	}
+	return levels;
     }
 
     // Loads a cookie with a given name, given the decoded document.cookie.
@@ -125,57 +159,26 @@ class LevelPicker {
 	    }
 	    if (cookie.indexOf(prefix) == 0) {
 		const jsonString = cookie.substring(prefix.length, cookie.length);
-		return JSON.parse(jsonString);
+		try {
+		    return JSON.parse(jsonString);
+		} catch (e) {
+		    console.error("Unable to parse cookie", cookieName, e);
+		    return null;
+		}
+	    }
+	}
+	return null;
+    }
+
+    deleteOldCookies() {
+	for (const cookie of document.cookie.split(";")) {
+	    const name = cookie.split("=")[0].trim();
+	    if (name.startsWith("MissingLink_")) {
+		document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
 	    }
 	}
     }
 
-    saveCookies() {
-	this.levelUrls.forEach(levelUrl => this.saveLevelCookie(levelUrl));
-	this.saveFinishedLevelsCookie();
-    }
-
-    saveFinishedLevelsCookie() {
-	// Save a high-priority cookie with the list of finished levels.  It's
-	// more important to keep this than the actual progress details.  Though
-	// note that if we re-order levels then this can produce incorrect results.
-	var finishedLevels = [];
-	for (let i = 0; i < this.levelUrls.length; ++i) {
-	    const levelUrl = this.levelUrls[i];
-	    if (this.cookieData.levels[levelUrl].progress.finished) {
-		finishedLevels.push(i);
-	    }
-	}
-	this.saveCookie("MissingLink_finished",
-			finishedLevels, /*priority=*/ "High");
-    }
-
-    saveLevelCookie(levelUrl) {
-	this.saveCookie("MissingLink_"+levelUrl,
-			this.cookieData.levels[levelUrl]);
-    }
-    
-    saveCookie(cookieName, jsonValue, priority="Medium") {
-	const jsonString = JSON.stringify(jsonValue);
-	const daysToExpire = 30;
-	const date = new Date();
-	date.setTime(date.getTime() + (daysToExpire * 24 * 60 * 60 * 1000));
-	document.cookie = (cookieName + "=" + jsonString
-			   + ";expires=" + date.toUTCString()
-			   + ";Priority=" + priority 
-			   + ";path=/");
-    }
-
-    clearCookies() { // For debugging
-	const cookies = document.cookie.split(";");
-	for (let i = 0; i < cookies.length; i++) {
-	    const cookie = cookies[i];
-	    const eqPos = cookie.indexOf("=");
-	    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-	    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-	}
-    }
-    
     hide() {
 	this.$container.hide();
     }
@@ -200,7 +203,7 @@ class LevelPicker {
 		    const title = root.extras.title;
 		    const backgroundColor = root.extras.backgroundColor;
 		    const thumbnail = root.extras.thumbnail ?? "images/thumbnail.png";
-		    var imgUrl = this.cookieData.levels[url].progress.finished ? 
+		    var imgUrl = this.savedData.levels[url].progress.finished ? 
 			thumbnail : "images/thumbnail.png";
 		    $thumbnail.css({
 			"background-image": "url('"+imgUrl+"')",
@@ -209,7 +212,7 @@ class LevelPicker {
 
 		    });
 		    $thumbnail.click(() => {
-			const levelData = this.cookieData.levels[url];
+			const levelData = this.savedData.levels[url];
 			if (levelData.locked) {
 			    this.flashLock(url);
 			    return;  // Level is locked
@@ -217,7 +220,6 @@ class LevelPicker {
 			this.game.show();
 			this.game.setProgressCallback((progress) => {
 			    levelData.progress = progress;
-			    this.saveLevelCookie(url);
 			    if (progress.finished) {
 				// Display the thumbnail.
 				$thumbnail.css({
@@ -227,12 +229,11 @@ class LevelPicker {
 				const index = levelData.index;
 				if (index < (this.levelUrls.length - 1)) {
 				    const nextUrl = this.levelUrls[index + 1];
-				    this.cookieData.levels[nextUrl].locked = false;
-				    this.saveLevelCookie(nextUrl);
+				    this.savedData.levels[nextUrl].locked = false;
 				    this.updateProgressBars();
 				}
 			    }
-			    this.saveFinishedLevelsCookie();
+			    this.save();
 			});
 			this.game.loadFromJson(value);
 			if (levelData.progress) {
@@ -261,7 +262,7 @@ class LevelPicker {
 
     updateProgressBars() {
 	for (const url in this.urlToThumbnail) {
-	    const percentDone = this.cookieData.levels[url].progress.percentDone;
+	    const percentDone = this.savedData.levels[url].progress.percentDone;
 	    const $thumbnail = this.urlToThumbnail[url];
 	    const $progressBar = $thumbnail.find(".levelProgressBar");
 	    const $progress = $progressBar.find(".progress");
@@ -271,7 +272,7 @@ class LevelPicker {
 	    } else {
 		$progressBar.hide();
 	    }
-	    if (this.cookieData.levels[url].locked) {
+	    if (this.savedData.levels[url].locked) {
 		$thumbnail.find(".levelLocked").show();
 	    } else {
 		$thumbnail.find(".levelLocked").hide();
