@@ -72,7 +72,7 @@ function linesIntersect(p1, p2, p3, p4) {
     const y4 = p4.y;
     var det, gamma, lambda;
     if ((x1 == x3 && y1 == y3 && x2 == x4 && y2 == y4) ||
-	(x1 == x4 && y1 == y4 && x2 == x3 && y2 == y2)) {
+	(x1 == x4 && y1 == y4 && x2 == x3 && y2 == y3)) {
 	// Corner case: line doesn't intersect w/ itself.
 	return false; 
     }
