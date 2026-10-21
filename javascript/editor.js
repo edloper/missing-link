@@ -814,6 +814,7 @@ class ColorLookupCanvas {
 	    blue += pixel.blue
 	    n += 1
 	});
+	if (n === 0) { return {red: 128, green: 128, blue: 128}; }
 	return {red: Math.round(red / n),
 		green: Math.round(green / n),
 		blue: Math.round(blue / n)}

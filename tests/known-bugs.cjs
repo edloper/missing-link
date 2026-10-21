@@ -9,17 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R11', 'triangle sampling rejects a degenerate triangle away from the point', () => {
-    const {isPointInTriangle} = load();
-    assert.equal(isPointInTriangle({x: 100, y: 100},
-	[{x: 0, y: 0}, {x: 0, y: 0}, {x: 0, y: 0}]), false);
-});
-
-bug('R11', 'circle intersection includes the full radius around segment endpoints', () => {
-    const {circleIntersectsLine} = load();
-    assert.equal(circleIntersectsLine({x: -6, y: 0}, 7, {x: 0, y: 0}, {x: 10, y: 0}), true);
-});
-
 bug('R12', 'Graph.loadFromJson works with its optional callbacks omitted', () => {
     const {Graph} = load();
     const graph = new Graph(drawing());

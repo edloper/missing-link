@@ -188,6 +188,8 @@ cases have Node reproductions.
 
 ### R11 — Low: degenerate triangles and endpoint proximity
 
+**Fixed:** Point inclusion rejects zero-area triangles; circle proximity uses the nearest point on the finite segment, including endpoints and zero-length segments.
+
 `javascript/shapes.js:30`, `javascript/shapes.js:96`
 
 Three coincident corners make isPointInTriangle return true everywhere.

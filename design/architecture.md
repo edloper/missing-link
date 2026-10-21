@@ -99,3 +99,4 @@ saving and `Game.resize()` all use it.
 - R8: Triangle sampling clamps pixel coordinates to the canvas bounds, including right/bottom edges, preventing invalid saved colors.
 - R9: Cookie migration decodes only matching progress values and isolates malformed values instead of decoding all site cookies.
 - R10: Overlap warnings use separating axes to detect duplicate/contained triangles while allowing shared edges and corners.
+- R11: Point inclusion rejects zero-area triangles; sampling them uses neutral gray. Circle proximity uses the nearest point on the finite segment, including endpoints and zero-length segments.

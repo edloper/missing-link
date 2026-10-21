@@ -47,6 +47,10 @@ test('circle/line test accepts a nearby segment and rejects distant ones', () =>
     assert.equal(intersects(p(5, 1), 2, p(0, 0), p(10, 0)), true);
     assert.equal(intersects(p(5, 3), 2, p(0, 0), p(10, 0)), false);
     assert.equal(intersects(p(20, 0), 2, p(0, 0), p(10, 0)), false);
+    assert.equal(intersects(p(-2, 0), 2, p(0, 0), p(10, 0)), true);
+    assert.equal(intersects(p(-2, 2), 2, p(0, 0), p(10, 0)), false);
+    assert.equal(intersects(p(1, 0), 2, p(0, 0), p(0, 0)), true);
+    assert.equal(intersects(p(3, 0), 2, p(0, 0), p(0, 0)), false);
 });
 
 test('HSV conversions cover primary colors, wraparound, grayscale and black', () => {

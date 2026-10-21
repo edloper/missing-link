@@ -36,6 +36,7 @@ function isPointInTriangle(p, corners) {
     const y1 = corners[0].y;
     const y2 = corners[1].y;
     const y3 = corners[2].y;
+    if ((x2-x1) * (y3-y1) === (y2-y1) * (x3-x1)) { return false; }
     const d1 = (x - x2) * (y1 - y2) - (x1 - x2) * (y - y2);
     const d2 = (x - x3) * (y2 - y3) - (x2 - x3) * (y - y3);
     const d3 = (x - x1) * (y3 - y1) - (x3 - x1) * (y - y1);
@@ -101,15 +102,9 @@ function linesIntersect(p1, p2, p3, p4) {
 function circleIntersectsLine(center, radius, p1, p2) {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
-    const distance = 
-	  Math.abs(dy*center.x - dx*center.y + p2.x*p1.y - p2.y*p1.x) /
-	  Math.hypot(dx, dy);
-    if (distance > radius) {
-	return false;
-    }
-    const [minX, maxX] = (p1.x < p2.x) ? [p1.x, p2.x] : [p2.x, p1.x];
-    const [minY, maxY] = (p1.y < p2.y) ? [p1.y, p2.y] : [p2.y, p1.y];
-    const inBounds = ((minX - radius/2 <= center.x) && (center.x <= maxX + radius/2) &&
-		      (minY - radius/2 <= center.y) && (center.y <= maxY + radius/2));
-    return inBounds;
+    const lengthSquared = dx*dx + dy*dy;
+    const projection = lengthSquared === 0 ? 0 :
+	((center.x-p1.x) * dx + (center.y-p1.y) * dy) / lengthSquared;
+    const t = Math.max(0, Math.min(1, projection));
+    return Math.hypot(center.x - (p1.x+t*dx), center.y - (p1.y+t*dy)) <= radius;
 }
