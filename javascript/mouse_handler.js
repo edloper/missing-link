@@ -238,7 +238,7 @@ class MouseHandler {
     mouseWheel(e) {
 	e.preventDefault(); // Don't scroll page.
         const point = this.game.draw.point(e.clientX, e.clientY);
-	var zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
+	var zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
 	this.zoomViewport(point, zoomFactor);
     }
 
