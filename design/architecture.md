@@ -51,6 +51,11 @@ regressions and repair status. Published levels and progress keys are unchanged.
 `Graph.levelTransform()` maps level coordinates to the canvas; loading,
 saving and `Game.resize()` all use it.
 
+Imports validate JSON structure, references, colors and metadata before clearing
+existing work. File inputs read UTF-8 text. PNG string exports use a magic pixel
+and explicit length to preserve empty strings and NUL characters; the decoder
+also accepts older zero-terminated PNG strings.
+
 ## Background images
 
 - The editor colors each triangle from the background image under it.
@@ -71,6 +76,9 @@ saving and `Game.resize()` all use it.
 - `edges` lists the player's edges as pairs of dot indices. When loading,
   edges that don't fit the level (for example, after the level's dots were
   edited) are skipped.
+- Save codes validate nested progress records before accepting an import.
+  Startup ignores invalid stored records while retaining valid ones; defaults
+  are added before reconstructing unlocks for missing records.
 - Progress is keyed by level URL, and a level unlocks when the one before it
   in `level_urls.js` is finished. So renaming, reordering or editing a
   published level affects players' progress.

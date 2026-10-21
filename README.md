@@ -23,17 +23,16 @@ progress storage and all level files. It does not change application sources.
 With the local server running, open http://localhost:8001/tests/browser.html
 for automatic browser integration tests. They use the same CDN libraries as
 the app and replace storage with memory inside isolated frames, preserving your
-saved progress. A successful run has zero FAILs and zero XPASSes; XFAILs are
-documented existing bugs. Results are also available in `window.testResults`.
+saved progress. All reviewed reproductions now pass; a successful run has zero
+FAILs, XFAILs and XPASSes. Results are available in `window.testResults`.
 
 ```sh
 npm run test:bugs
 ```
 
-This separate command asserts the desired behavior for known bugs and currently
-exits **1**. `npm run test:known` executes those same reproductions as Node TODOs
-and exits successfully. When fixing a bug, promote its reproductions to normal
-tests and remove the browser XFAIL marker.
+This command runs the original Node bug reproductions, now ordinary passing
+regression tests. `npm run test:known` is an alias for the same focused suite.
+The browser page includes the remaining editor and browser utility regressions.
 
 See [the review](design/code_review.md) for findings and
 [testing details](design/testing.md) for scope and limitations.

@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.cjs",
-    "test:bugs": "node tests/run-known-bugs.cjs",
-    "test:known": "node --test tests/known-bugs.cjs"
+    "test:bugs": "node --test tests/review-regressions.test.cjs",
+    "test:known": "node --test tests/review-regressions.test.cjs"
   },
   "engines": {
     "node": ">=22"

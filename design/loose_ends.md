@@ -5,11 +5,8 @@ fixed.
 
 ## Code review findings (2026-10-20)
 
-See `code_review.md` for reproduction details and repair status. Remaining
-reproduced issues:
-
-
-Inspection/data follow-up remains: R22 published level coordinates; R23
+See `code_review.md` for completed repairs. Open inspection/data findings:
+R22 published level coordinates; R23
 load/storage error UX; R24 timer/listener/gesture cleanup; R25 accessibility
 and mobile layout; R26 metadata/history consistency and code cleanup. The local
 server also intermittently refuses bursts of script requests. See the review.

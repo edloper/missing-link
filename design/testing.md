@@ -1,15 +1,13 @@
 # Testing
 
-Added on 2026-10-20 without changing application JavaScript, pages, CSS or levels.
-The only deployment change excludes test/development files from Jekyll.
+Added on 2026-10-20, then extended as the 21 reproduced review issues were fixed
+in separate commits. Published levels and progress keys are unchanged.
 
 ## Commands
 
 - `npm test` (or `npm.cmd test` in Windows PowerShell): passing baseline.
-- `npm run test:bugs`: known-bug reproductions as ordinary failing tests;
-  currently expected to exit 1.
-- `npm run test:known`: the same reproductions marked TODO, so existing failures
-  do not fail the command. A future fix must promote its test to the baseline.
+- `npm run test:bugs`: the original Node reproductions, now passing regressions.
+- `npm run test:known`: compatibility alias for the same focused regression suite.
 - `python server.py 8001`, then http://localhost:8001/tests/browser.html:
   browser integration tests, running automatically when opened.
 
@@ -36,14 +34,14 @@ server sometimes refuses speculative bursts of requests on Windows.
   checks establish graph consistency; they do not prove that every puzzle can
   be solved through the stricter manual drag path. Normalized bounds and other
   data issues are recorded in the review instead of changing published dots.
-- `known-bugs.cjs`: executable desired-behavior assertions for review IDs
-  R1–R13. Separate from the passing baseline.
+- `review-regressions.test.cjs`: the original Node reproductions for R1–R13,
+  promoted to ordinary passing tests, plus zero-area color sampling coverage.
 - `browser.html`, `browser-runner.js`, `browser-fixture.html`,
   `browser-tests.js`: real constructors, DOM/SVG mouse events, buttons,
   checkbox, picker fetch/save/reset/save-code dialog, editor subdivision and
   undo, image fallback, file import, PNG encoding, thumbnail conversion,
   canvas color sampling, color sliders and Home Screen tip. Existing browser
-  failures are tagged with review IDs.
+  regressions are tagged with review IDs; none retain expected-failure markers.
 
 The Node helper evaluates unmodified script-tag sources in fresh VM contexts.
 It substitutes a small recording SVG drawing surface, in-memory storage and
@@ -65,9 +63,10 @@ means the known-issue marker needs review and makes the page fail.
 ## Verification and limits
 
 Verified with Node 24.19.0 and the T3 Code Chromium preview on Windows:
-59 passing Node baseline tests, 20 strict Node reproductions failing as expected,
-21 passing browser tests, 13 expected browser failures, no unexpected failures
-or passes. Known-bug tests are executed, not skipped.
+83 passing Node tests and 39 passing browser tests. All 20 original Node and
+13 original browser reproductions pass, with no TODOs or expected failures.
+Compatibility includes every published/draft level, sparse progress records,
+UTF-8 JSON imports and legacy zero-terminated PNG strings.
 
 Not verified on Firefox, Safari, a real phone or iPad, or with native touch
 gestures. Synthetic events do not establish OS/browser gesture behavior,

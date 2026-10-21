@@ -11,8 +11,9 @@ helper/API usage or maintainability.
 ## Reproduced issues
 
 Each R ID is used by tests so later fixes can promote a desired-behavior
-assertion to a normal passing regression test. Node reproductions live in
-`tests/known-bugs.cjs`; browser reproductions in `tests/browser-tests.js`.
+assertion to a normal passing regression test. All reproduced issues below are
+fixed. Node regressions now live in `tests/review-regressions.test.cjs`; browser
+regressions are in `tests/browser-tests.js`. Inspection findings R22–R26 remain.
 
 ### R2 — High: dot touch handlers use mouse coordinates
 
@@ -308,3 +309,13 @@ These are inspection/data findings, not reproduced end-to-end failures.
   excludes test/development files from Jekyll. No public push was performed.
 - Real phones, Safari/Firefox, native touch, clipboard/download UI, permission
   prompts and public deployment were not tested. See testing.md for details.
+
+## Post-fix validation
+
+All 21 reproduced issues were repaired in individual commits. The expanded suite
+has 83 passing Node tests and 39 passing Chromium browser tests, with zero TODOs
+or expected failures. All 12 levels still round-trip and complete by hints;
+published dot coordinates/indices and level order are unchanged. Old progress
+and legacy PNG string encoding remain readable. Physical-device, Safari and
+Firefox limitations above still apply. Open inspection/data findings and older
+cleanup requests remain in `loose_ends.md`.
