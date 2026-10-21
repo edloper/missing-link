@@ -1,2 +1,4 @@
 title: Missing Link
 description: Missing Link
+# Notes for agents and developers; not part of the website.
+exclude: [AGENTS.md, CLAUDE.md, design]
