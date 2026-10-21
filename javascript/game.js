@@ -100,8 +100,15 @@ class Game {
 	    this.hint(/*finishLevel=*/true);
 	} else {
 	    for (const edge of progress.edges ?? []) {
-		this.addEdge(this.graph.dots[edge[0]], this.graph.dots[edge[1]],
-			     /*saveProgress=*/ false);
+		const start = this.graph.dots[edge[0]];
+		const end = this.graph.dots[edge[1]];
+		// Skip edges that don't fit the level (e.g., if it was edited
+		// after the progress was saved).
+		if (!start || !end || start === end ||
+		    this.dotsAreConnectedByEdge(start, end)) {
+		    continue;
+		}
+		this.addEdge(start, end, /*saveProgress=*/ false);
 	    }
 	}
     }
