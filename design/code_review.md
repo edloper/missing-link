@@ -286,6 +286,9 @@ These are inspection/data findings, not reproduced end-to-end failures.
   graph navigation is pointer-only. No page has a viewport meta tag. Fixed-width
   title/picker and overflow-hidden layouts need real-phone checks; existing
   editor touch-slider/layout limitations remain in todo.md.
+  The new WebKit device checks reproduce the viewport issue in iPhone portrait,
+  iPhone landscape and iPad portrait; the desired-layout assertion is available
+  through `npm run test:mobile:known`. See testing.md for measurements and limits.
 - **R26 — Low, consistency/cleanup:** zoom/opacity changes lack consistent undo
   state; undoing image changes resamples colors rather than restoring them.
   clear retains thumbnail/background/zoom metadata. Version is read but unused;

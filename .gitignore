@@ -5,3 +5,8 @@
 # Local-only files (everything committed here is published on the website)
 backgrounds/personal/
 todo.txt
+
+# Development dependencies and browser test artifacts
+node_modules/
+test-results/
+playwright-report/

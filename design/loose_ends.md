@@ -11,6 +11,15 @@ load/storage error UX; R24 timer/listener/gesture cleanup; R25 accessibility
 and mobile layout; R26 metadata/history consistency and code cleanup. The local
 server also intermittently refuses bursts of script requests. See the review.
 
+### Mobile checks (2026-10-20)
+
+- R25 now has an executable viewport reproduction in
+  `tests/mobile/game.spec.cjs` (`npm run test:mobile:known`). Without a viewport
+  meta tag, WebKit renders the iPhone portrait/landscape and iPad portrait page
+  at 980 CSS pixels and shrinks it to the device width. The iPad landscape
+  profile fits at its 1080px width. Functional checks account for input-coordinate scaling;
+  production layout has not been changed. See `testing.md` for limits.
+
 ## Earlier findings
 
 - `levels/bunny.json` and `levels/xmastree.json` were saved on Dec 23, 2024,

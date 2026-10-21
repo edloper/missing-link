@@ -11,7 +11,7 @@ in separate commits. Published levels and progress keys are unchanged.
 - `python server.py 8001`, then http://localhost:8001/tests/browser.html:
   browser integration tests, running automatically when opened.
 
-Node 22+ is required. No installed packages or generated dependencies are needed.
+Node 22+ is required. The Node baseline needs no installed packages.
 Node's built-in test runner executes `tests/*.test.cjs`. The browser runner uses
 the app's existing jQuery, jQuery UI and SVG.js CDN URLs; internet is required
 for that suite. It loads scripts sequentially because the single-threaded local
@@ -73,6 +73,81 @@ gestures. Synthetic events do not establish OS/browser gesture behavior,
 passive listener semantics or accessibility. Browser clipboard permissions,
 actual file-download UX, persistent-storage prompts and deployment behavior
 also need manual checks. No coverage-percentage claim is made.
+
+## Automated iPhone/iPad checks
+
+The optional Playwright suite adds a pinned development dependency and lockfile.
+It leaves production pages/scripts, level data and player storage formats alone.
+Setup (Windows PowerShell may require `npm.cmd` / `npx.cmd`):
+
+```sh
+npm ci
+npx playwright install webkit
+npm run test:mobile
+```
+
+The browser download is stored in Playwright's per-user cache, outside the repo.
+On this Windows machine installation needed no administrator approval and
+downloaded WebKit and its FFmpeg helper. The website requires neither package.
+On Linux, Playwright may also need its documented system dependencies.
+
+`playwright.config.cjs` selects four WebKit projects: iPhone 13 and iPad (gen 7),
+each in portrait and landscape. Profiles set the user agent, screen/viewport,
+device pixel ratio, mobile layout behavior and touch capability. These are
+device profiles, not emulations of the particular iOS versions in the UA.
+Every test gets fresh browser context/storage, separate from the owner's browser.
+The runner starts `python server.py 8001` if needed and otherwise reuses the
+local server. One worker avoids overwhelming its small connection backlog.
+
+- `npm run test:mobile`: functional mobile checks and all 39 browser regressions
+  in each device/orientation, excluding explicitly named `@known` issues.
+- `npm run test:mobile:known`: desired-behavior assertions for open R25 viewport
+  layout behavior; can exit 1. Artifacts go in `test-results/known/` without
+  replacing the passing suite's HTML report.
+- `npm run test:mobile -- --project=iphone-portrait`: run one device profile.
+- `npm run test:mobile:headed -- --project=ipad-portrait`: watch automated checks.
+- `npm run test:mobile:report`: inspect the latest full-suite HTML report.
+- With `python server.py 8001` already running, `npm run mobile:iphone` or
+  `npm run mobile:ipad` opens an interactive device-sized WebKit window. These
+  commands are for visual/manual checks; they do not reproduce physical fingers.
+
+The new checks exercise the actual fullscreen page: locked thumbnails, native
+tap events for Hint/Undo/Easy Mode/Back, partial progress across reload, save-code
+export/import through its dialog and confirmation, tip dismissal persistence,
+simulated Home Screen detection, viewport rotation preserving normalized dots
+and edges, and synthetic drag/pinch cancellation. Compatibility tests also run
+the existing DOM/SVG/canvas/editor tests in WebKit.
+
+Windows WebKit's input coordinates require visual-viewport scaling on pages
+that shrink a default 980px layout. The test tap helper maps DOM positions to
+screen coordinates and uses `page.touchscreen.tap`; a check confirms that Hint
+receives trusted native events. It does not inject a viewport tag or change the
+page's CSS. Playwright's touchscreen API supports taps only, so drags and pinches
+are explicitly labeled synthetic `TouchEvent` sequences. Page errors fail tests.
+
+Reports, screenshots and failure traces stay in ignored `playwright-report/`
+and `test-results/` directories. Jekyll excludes these directories, test sources,
+config, dependencies and npm manifests. No runtime dependency/build step is added.
+
+This was verified with Playwright 1.64.1 and its Windows WebKit 27.2 build.
+All 28 functional project/test combinations pass (seven checks per profile),
+including all 39 existing browser regressions in each profile. The 83 Node tests
+still pass. The separate R25 desired-layout check fails on iPhone portrait
+(390px device, 980px layout), iPhone landscape (750px, 980px) and iPad portrait
+(810px, 980px); it passes on iPad landscape (1080px). It deliberately exits 1
+while that issue remains open, rather than treating the shrunken layout as correct.
+
+The WebKit build is not branded Safari; platform-dependent behavior can differ.
+This Windows build reports navigator.maxTouchPoints as zero even in the touch
+profiles, so these runs exercise the iPhone/iPad UA branch of tip detection,
+not modern iPad Safari's desktop-UA/platform detection branch.
+Resizing the viewport does not model Safari's collapsing toolbar, OS orientation
+events, keyboard, safe-area hardware, true multi-finger input or storage eviction.
+The Home Screen flag is injected for that one test, not an installed PWA.
+Those behaviors still need Apple Simulator or real-device testing. See the
+[Playwright emulation docs](https://playwright.dev/docs/emulation),
+[touch limitations](https://playwright.dev/docs/api/class-touchscreen) and
+[WebKit platform notes](https://playwright.dev/docs/browsers#webkit).
 
 ## Extending the suite
 
