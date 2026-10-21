@@ -279,7 +279,8 @@ class LevelEditor {
 	} else if (action == "setBackgroundColor") {
 	    this.setBackgroundColor(args.old);
 	} else if (action == "setImage") {
-	    this.setImage(args.oldImage.path, args.oldImage.image);
+	    this.setImage(args.oldImage.path, args.oldImage.filename,
+			  this.backgroundImageZoom);
 	    $("#editorLoadBackground").val('');
 	} else if (action == "deleteLevel") {
 	    console.log("undo delete -- Loading from json");
