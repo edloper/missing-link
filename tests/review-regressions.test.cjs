@@ -62,3 +62,19 @@ test('R4: a finished predecessor unlocks a newly added successor record', () => 
     assert.equal(picker.savedData.levels.b.locked, false);
 });
 
+test('R5: zoom keeps the cursor anchored on the first zoom from 100 percent', () => {
+    const api = load();
+    const mouse = new api.MouseHandler({width: 600, height: 400, draw: drawing()});
+    mouse.zoomViewport({x: 300, y: 200}, 2);
+    assert.deepEqual(plain(mouse.viewOffset), {x: 150, y: 100});
+});
+
+test('R5: zooming out from an edge clamps to the NEW viewport bounds', () => {
+    const api = load();
+    const mouse = new api.MouseHandler({width: 600, height: 400, draw: drawing()});
+    mouse.zoomLevel = 2;
+    mouse.viewOffset = {x: 300, y: 200};
+    mouse.zoomViewport({x: 300, y: 200}, 0.5);
+    assert.deepEqual(plain(mouse.viewOffset), {x: 0, y: 0});
+});
+

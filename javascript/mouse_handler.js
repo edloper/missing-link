@@ -266,6 +266,7 @@ class MouseHandler {
 	// Zoom in/out, keeping the mouse at the same canvas position.
 	this.viewOffset.x += (point.x - this.viewOffset.x) * (1 - 1/zoomFactor);
 	this.viewOffset.y += (point.y - this.viewOffset.y) * (1 - 1/zoomFactor);
+	this.zoomLevel *= zoomFactor;
 	// Don't view outside the original viewport.
         this.viewOffset.x = Math.max(this.viewOffset.x, 0);
         this.viewOffset.y = Math.max(this.viewOffset.y, 0);
@@ -273,8 +274,6 @@ class MouseHandler {
 				     this.game.width * (1 - 1/this.zoomLevel));
 	this.viewOffset.y = Math.min(this.viewOffset.y,
 				     this.game.height * (1 - 1/this.zoomLevel));
-	// Update zoom level
-	this.zoomLevel *= zoomFactor;
 	this.updateViewbox();
     }
 

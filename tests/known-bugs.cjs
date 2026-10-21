@@ -9,22 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R5', 'zoom keeps the cursor anchored on the first zoom from 100 percent', () => {
-    const api = load();
-    const mouse = new api.MouseHandler({width: 600, height: 400, draw: drawing()});
-    mouse.zoomViewport({x: 300, y: 200}, 2);
-    assert.deepEqual(plain(mouse.viewOffset), {x: 150, y: 100});
-});
-
-bug('R5', 'zooming out from an edge clamps to the NEW viewport bounds', () => {
-    const api = load();
-    const mouse = new api.MouseHandler({width: 600, height: 400, draw: drawing()});
-    mouse.zoomLevel = 2;
-    mouse.viewOffset = {x: 300, y: 200};
-    mouse.zoomViewport({x: 300, y: 200}, 0.5);
-    assert.deepEqual(plain(mouse.viewOffset), {x: 0, y: 0});
-});
-
 bug('R6', 'malformed level import preserves the previous graph', () => {
     const game = makeGame(load());
     try { game.loadFromJson('{'); } catch (e) {}

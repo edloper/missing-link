@@ -9,7 +9,6 @@ See `code_review.md` for reproduction details and repair status. Remaining
 reproduced issues:
 
 - R6: failed level import destroys the current graph.
-- R5: zoom clamps against the previous zoom level.
 - R7: dot deletion is not one undoable editor action.
 - R8: color sampling can produce invalid saved colors.
 - R14: shortcuts conflict with browser/text editing.

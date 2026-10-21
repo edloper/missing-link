@@ -83,6 +83,8 @@ unlocked. Relevant to legacy cookies, imports and new levels. Both Node-tested.
 
 ### R5 — Medium: zoom clamps against the previous zoom level
 
+**Fixed:** Zoom clamps offsets using the new magnification, keeping the cursor anchored and the viewport within the canvas.
+
 `javascript/mouse_handler.js:258`
 
 Bounds use `this.zoomLevel` before applying the new factor. Zooming from 1 to
