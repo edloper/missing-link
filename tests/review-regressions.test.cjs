@@ -95,3 +95,12 @@ test('R7: one undo restores a deleted editor dot AND its triangles', () => {
     assert.equal(editor.graph.tris.length, 2);
 });
 
+test('R8: out-of-canvas triangle sampling returns finite color components', () => {
+    const api = load();
+    const lookup = Object.create(api.ColorLookupCanvas.prototype);
+    Object.assign(lookup, {loaded: true, canvas: {width: 2, height: 2},
+	imageData: {data: new Uint8ClampedArray(16).fill(255)}});
+    const color = lookup.getTriColor([{x: 0, y: 0}, {x: 2, y: 0}, {x: 0, y: 2}]);
+    assert.ok(Object.values(color).every(Number.isFinite));
+});
+

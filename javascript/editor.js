@@ -821,6 +821,8 @@ class ColorLookupCanvas {
 
     getPixel(x, y) {
 	var canvasWidth = this.canvas.width;
+	x = Math.max(0, Math.min(canvasWidth - 1, Math.round(x)));
+	y = Math.max(0, Math.min(this.canvas.height - 1, Math.round(y)));
 	const index = ((y * canvasWidth) + x) * 4;
 	const data = this.imageData.data;
 	const pixel = {red: data[index],

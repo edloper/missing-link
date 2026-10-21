@@ -107,6 +107,8 @@ tests reproduce a two-triangle graph returning with only one triangle.
 
 ### R8 — Medium: color sampling can produce invalid saved colors
 
+**Fixed:** Triangle sampling clamps pixel coordinates to the canvas bounds, including right/bottom edges, preventing invalid saved colors.
+
 `javascript/editor.js:792`, `javascript/editor.js:813`
 
 `getPixel` does not clamp/validate coordinates. At x equal to canvas width it
