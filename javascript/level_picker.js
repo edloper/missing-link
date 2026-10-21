@@ -10,6 +10,60 @@
 
 const PROGRESS_STORAGE_KEY = "MissingLink_progress";
 
+// Save codes are "ML1-" followed by the progress json, deflate-compressed
+// and base64-encoded ("ML0-" if the browser can't compress).
+async function encodeSaveCode(data) {
+    let bytes = new TextEncoder().encode(JSON.stringify(data));
+    let prefix = "ML0-";
+    if (window.CompressionStream) {
+	const stream = new Blob([bytes]).stream()
+	      .pipeThrough(new CompressionStream("deflate"));
+	bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+	prefix = "ML1-";
+    }
+    let binary = "";
+    for (const b of bytes) {
+	binary += String.fromCharCode(b);
+    }
+    return prefix + btoa(binary);
+}
+
+async function decodeSaveCode(code) {
+    code = code.replace(/\s/g, "");
+    const prefix = code.slice(0, 4);
+    if (prefix != "ML0-" && prefix != "ML1-") {
+	throw new Error("it should start with ML1-");
+    }
+    let bytes;
+    try {
+	bytes = Uint8Array.from(atob(code.slice(4)), c => c.charCodeAt(0));
+    } catch (e) {
+	throw new Error("it isn't complete (check that you copied all of it)");
+    }
+    if (prefix == "ML1-") {
+	if (!window.DecompressionStream) {
+	    throw new Error("this browser is too old to read it");
+	}
+	try {
+	    const stream = new Blob([bytes]).stream()
+		  .pipeThrough(new DecompressionStream("deflate"));
+	    bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+	} catch (e) {
+	    throw new Error("it isn't complete (check that you copied all of it)");
+	}
+    }
+    let data;
+    try {
+	data = JSON.parse(new TextDecoder().decode(bytes));
+    } catch (e) {
+	throw new Error("it isn't complete (check that you copied all of it)");
+    }
+    if (typeof data?.levels != "object" || data.levels === null) {
+	throw new Error("it doesn't contain any progress");
+    }
+    return data;
+}
+
 class LevelPicker {
     constructor(container, game, levelUrls) {
 	this.levelUrls = levelUrls;
@@ -45,8 +99,13 @@ class LevelPicker {
 	this.$resetConfirm = $("<div class='resetConfirm' title='Reset Progress?'>" +
 			       "Are you sure?  This can not be undone.</div>");
 	this.$container.append(this.$resetConfirm)
-	this.$resetButton = $("<button class='resetProgress'>Reset Progress</button>");
-	this.$container.append(this.$resetButton)
+	this.$buttons = $("<div class='levelPickerButtons'></div>");
+	this.$container.append(this.$buttons);
+	this.$saveCodeButton = $("<button class='levelPickerButton'>Save Code</button>");
+	this.$buttons.append(this.$saveCodeButton);
+	this.$saveCodeButton.click(() => this.showSaveCodeDialog());
+	this.$resetButton = $("<button class='levelPickerButton'>Reset Progress</button>");
+	this.$buttons.append(this.$resetButton)
 	this.$resetButton.click(() => {
 	    this.$resetConfirm.dialog({
 		resizable: false,
@@ -63,6 +122,57 @@ class LevelPicker {
 		    }
 		}
 	    })
+	});
+    }
+
+    // Shows a dialog where the player can copy a "save code" with their
+    // progress, or paste one to restore progress (e.g., on another device, or
+    // after the browser deleted its saved data).
+    showSaveCodeDialog() {
+	const $dialog = $(
+	    "<div class='saveCodeDialog' title='Save Code'>" +
+	    "<p>Copy this code and keep it somewhere safe.  You can use it to " +
+	    "get your progress back, or to move it to another device.</p>" +
+	    "<textarea class='saveCodeOut' readonly></textarea>" +
+	    "<p>To restore progress, paste a save code here:</p>" +
+	    "<textarea class='saveCodeIn'></textarea>" +
+	    "<p class='saveCodeMessage'></p>" +
+	    "</div>");
+	const $out = $dialog.find(".saveCodeOut");
+	const $in = $dialog.find(".saveCodeIn");
+	const $message = $dialog.find(".saveCodeMessage");
+	encodeSaveCode({levels: this.savedData.levels})
+	    .then(code => $out.val(code))
+	    .catch(e => $message.text("Unable to make a save code: " + e));
+	$out.on('focus click', () => $out.select());
+	$dialog.dialog({
+	    resizable: false,
+	    height: "auto",
+	    width: Math.min(450, window.innerWidth - 20),
+	    modal: true,
+	    close: () => $dialog.remove(),
+	    buttons: {
+		"Copy Code": () => {
+		    $out.select();
+		    navigator.clipboard.writeText($out.val())
+			.then(() => $message.text("Copied."))
+			.catch(() => $message.text("Select the code and copy it."));
+		},
+		"Load Code": () => {
+		    decodeSaveCode($in.val())
+			.then(data => {
+			    if (confirm("Replace your current progress with the " +
+					"progress in this save code?")) {
+				this.savedData = {levels: data.levels};
+				this.save();
+				location.reload();
+			    }
+			})
+			.catch(e => $message.text("That save code didn't work: " +
+						  e.message));
+		},
+		"Close": () => $dialog.dialog("close"),
+	    }
 	});
     }
 
