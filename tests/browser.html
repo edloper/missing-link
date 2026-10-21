@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Missing Link browser tests</title>
+<style>
+  body { font: 16px system-ui; max-width: 1000px; margin: 2em auto; }
+  .pass { color: #176923; } .xfail { color: #865600; }
+  .fail, .xpass { color: #a00; } li { margin: .4em 0; }
+  iframe { width: 900px; height: 720px; border: 1px solid #aaa; }
+</style>
+<h1>Missing Link browser tests</h1>
+<p>Runs real SVG, DOM, canvas and input integration tests. Storage is replaced
+with memory inside the test frame, so your saved progress is untouched.
+Reload to rerun. Known issues show as XFAIL; unexpected passes need review.</p>
+<p id="summary">Running…</p>
+<ol id="results"></ol>
+<script src="browser-runner.js"></script>
+</html>

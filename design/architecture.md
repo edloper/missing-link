@@ -4,6 +4,10 @@ Missing Link is a static browser puzzle game: plain JavaScript, with jQuery,
 jQuery UI and svg.js loaded from CDNs, and no build step. Players connect dots
 to reveal a picture made of triangles. A desktop level editor makes the levels.
 
+The dependency-free Node suite and browser integration runner are described in
+`testing.md`. `code_review.md` records the 2026-10-20 review and executable
+known-bug reproductions; runtime fixes are intentionally deferred.
+
 ## Pages
 
 - `index.html`: title page, linking to the game and the editor.

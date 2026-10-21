@@ -1,4 +1,4 @@
 title: Missing Link
 description: Missing Link
-# Notes for agents and developers; not part of the website.
-exclude: [AGENTS.md, CLAUDE.md, design]
+# Notes and test tooling for agents/developers; not part of the website.
+exclude: [AGENTS.md, CLAUDE.md, README.md, design, tests, package.json, package-lock.json, node_modules]

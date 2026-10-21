@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Isolated test fixture</title>
+<base href="../">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="style.css">
+<script>
+  // Install before any application code. No real saved data is read or written.
+  const testStorage = new Map();
+  Object.defineProperty(window, 'localStorage', {value: {
+      getItem: key => testStorage.get(key) ?? null,
+      setItem: (key, value) => testStorage.set(key, String(value)),
+      removeItem: key => testStorage.delete(key), clear: () => testStorage.clear(),
+  }});
+  // Isolate legacy cookie reads/writes too.
+  Object.defineProperty(document, 'cookie', {get: () => '', set: () => {}});
+</script>
+<div id="fixture"></div>
+<script>
+  // Load in production order, sequentially: server.py has a small connection
+  // backlog, and speculative parallel requests can be refused on Windows.
+  window.testsReady = (async () => {
+      const sources = [
+	  'https://code.jquery.com/jquery-3.6.0.js',
+	  'https://code.jquery.com/ui/1.13.2/jquery-ui.js',
+	  'https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js',
+	  ...['string_to_png', 'svg_to_png', 'toggle', 'shapes', 'color',
+	      'graph', 'mouse_handler', 'confetti', 'game', 'level_picker',
+	      'editor', 'colorpicker', 'level_urls'].map(name => 'javascript/' + name + '.js'),
+	  'tests/browser-tests.js',
+      ];
+      for (const src of sources) {
+	  await new Promise((resolve, reject) => {
+	      const script = document.createElement('script');
+	      script.src = src;
+	      script.onload = resolve;
+	      script.onerror = () => reject(new Error('Unable to load ' + src));
+	      document.head.appendChild(script);
+	  });
+      }
+  })();
+</script>
+</html>

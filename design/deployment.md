@@ -3,7 +3,8 @@
 - https://www.the-missing-link.org/ is GitHub Pages serving the `main` branch
   of https://github.com/edloper/missing-link (root folder). Jekyll is on
   (`_config.yml`), and it skips files ending in `~` and the files listed under
-  `exclude` (the agent notes and `design/`).
+  `exclude` (the agent notes, development README, `design/`, `tests/`, npm manifests and
+  `node_modules/`). Test tooling does not change the static site's runtime.
 - The `CNAME` file sets the custom domain. The bare domain and
   `edloper.github.io/missing-link/` redirect to `www.`.
 - Cloudflare is only the registrar and DNS. The DNS records point straight at
