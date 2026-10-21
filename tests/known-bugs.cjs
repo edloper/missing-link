@@ -9,13 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R12', 'Graph.loadFromJson works with its optional callbacks omitted', () => {
-    const {Graph} = load();
-    const graph = new Graph(drawing());
-    graph.loadFromJson(JSON.stringify(level));
-    assert.equal(graph.dots.length, 4);
-});
-
 bug('R13', 'dot hit target keeps its dotSize scale after a move', () => {
     const {Graph} = load();
     const graph = new Graph(drawing(), {dotSize: 2, clickCircleRadius: 20});

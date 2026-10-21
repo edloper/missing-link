@@ -142,3 +142,10 @@ test('R11: sampling a zero-area triangle uses a finite fallback color', () => {
 	{red: 128, green: 128, blue: 128});
 });
 
+test('R12: Graph.loadFromJson works with its optional callbacks omitted', () => {
+    const {Graph} = load();
+    const graph = new Graph(drawing());
+    graph.loadFromJson(JSON.stringify(level));
+    assert.equal(graph.dots.length, 4);
+});
+

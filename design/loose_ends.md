@@ -13,7 +13,6 @@ reproduced issues:
 - R16: loaded background and color controls disagree.
 - R19: image failure can leave thumbnail export pending.
 - R20: JSON file import corrupts non-ASCII text.
-- R12: Graph's optional callbacks lose their receiver.
 - R13: moving a scaled dot changes its hit target.
 - R17: PNG string helper truncates embedded NULs.
 - R18: optional ToggleButton callback is not callable.

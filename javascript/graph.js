@@ -175,11 +175,12 @@ class Graph {
 	for (const dot_json of root.dots) {
 	    const x = dot_json.x * t.scale + t.dx;
 	    const y = dot_json.y * t.scale + t.dy;
-	    const dot = (addDot ?? this.addDot)(x, y);
+	    const dot = addDot ? addDot(x, y) : this.addDot(x, y);
 	}
 	for (const tri_json of root.tris) {
 	    const corners = tri_json.corners.map(n => this.dots[n]);
-	    const tri = (addTri ?? this.addTri)(corners, tri_json.color ?? {red: 255, green: 0, blue: 0});
+	    const color = tri_json.color ?? {red: 255, green: 0, blue: 0};
+	    const tri = addTri ? addTri(corners, color) : this.addTri(corners, color);
 	}
 	return root.extras ?? {};
     }

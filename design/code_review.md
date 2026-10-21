@@ -200,6 +200,8 @@ and warnings. Both cases have Node reproductions.
 
 ### R12 — Low: Graph's optional callbacks lose their receiver
 
+**Fixed:** Graph.loadFromJson calls its own addDot/addTri methods with the graph receiver when custom callbacks are omitted.
+
 `javascript/graph.js:148`, `javascript/graph.js:152`
 
 `(addDot ?? this.addDot)(x, y)` invokes the fallback without this.
