@@ -9,18 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R10', 'triangle overlap detection rejects identical triangles', () => {
-    const {trianglesOverlap} = load();
-    const tri = [{x: 0, y: 0}, {x: 10, y: 0}, {x: 0, y: 10}];
-    assert.equal(trianglesOverlap(tri, tri), true);
-});
-
-bug('R10', 'triangle overlap detection includes complete containment', () => {
-    const {trianglesOverlap} = load();
-    assert.equal(trianglesOverlap([{x: 0, y: 0}, {x: 10, y: 0}, {x: 0, y: 10}],
-	[{x: 1, y: 1}, {x: 2, y: 1}, {x: 1, y: 2}]), true);
-});
-
 bug('R11', 'triangle sampling rejects a degenerate triangle away from the point', () => {
     const {isPointInTriangle} = load();
     assert.equal(isPointInTriangle({x: 100, y: 100},

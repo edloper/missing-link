@@ -27,6 +27,9 @@ test('triangle edge crossings are detected; adjacent triangles are allowed', () 
     const {trianglesOverlap: overlap} = load();
     assert.equal(overlap(triangle, [p(5, -2), p(5, 8), p(12, 5)]), true);
     assert.equal(overlap(triangle, [p(10, 0), p(0, 10), p(10, 10)]), false);
+    assert.equal(overlap(triangle, [p(10, 0), p(20, 0), p(20, 10)]), false);
+    assert.equal(overlap(triangle, [p(20, 0), p(30, 0), p(20, 10)]), false);
+    assert.equal(overlap(triangle, [...triangle].reverse()), true);
 });
 
 test('sampling visits only triangle points and covers corners and interior', () => {

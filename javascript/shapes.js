@@ -47,17 +47,22 @@ function isPointInTriangle(p, corners) {
 }
 
 function trianglesOverlap(corners1, corners2) {
-    const edges = [[0, 1], [1, 2], [2, 0]];
-
-    for (const edge1 of edges) {
-	for (const edge2 of edges) {
-	    if (linesIntersect(corners1[edge1[0]], corners1[edge1[1]],
-		 	       corners2[edge2[0]], corners2[edge2[1]])) {
-		return true;
+    // Separating axes detect containment and identical triangles as well as
+    // crossings. Touching at only an edge/corner is allowed.
+    for (const corners of [corners1, corners2]) {
+	for (let i = 0; i < 3; i++) {
+	    const a = corners[i], b = corners[(i+1) % 3];
+	    const nx = a.y - b.y, ny = b.x - a.x;
+	    const project = points => points.map(p => p.x * nx + p.y * ny);
+	    const p1 = project(corners1), p2 = project(corners2);
+	    const epsilon = 1e-9 * Math.hypot(nx, ny);
+	    if (Math.min(...p1) >= Math.max(...p2) - epsilon ||
+		Math.min(...p2) >= Math.max(...p1) - epsilon) {
+		return false;
 	    }
 	}
     }
-    return false;
+    return true;
 }
 
 // returns true if the line from p1->p2 intersects with p3->p4.

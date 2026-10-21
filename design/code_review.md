@@ -176,6 +176,8 @@ start. This includes cookies unrelated to the game. Node reproduction.
 
 ### R10 — Low/medium: overlap checking misses duplicate triangles
 
+**Fixed:** Overlap warnings use separating axes to detect duplicate/contained triangles while allowing shared edges and corners.
+
 `javascript/shapes.js:49`, `javascript/editor.js:576`
 
 Only strict edge crossings count; identical triangles and containment return

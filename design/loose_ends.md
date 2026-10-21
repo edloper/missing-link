@@ -13,7 +13,6 @@ reproduced issues:
 - R16: loaded background and color controls disagree.
 - R19: image failure can leave thumbnail export pending.
 - R20: JSON file import corrupts non-ASCII text.
-- R10: overlap checking misses duplicate triangles.
 - R11: degenerate triangles and endpoint proximity.
 - R12: Graph's optional callbacks lose their receiver.
 - R13: moving a scaled dot changes its hit target.
