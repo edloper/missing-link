@@ -137,6 +137,19 @@ class LevelPicker {
 	}
     }
 
+    // Asks the browser not to delete saved progress (e.g., when it is low on
+    // space).  Some browsers ask the player first, so this is only done once
+    // a level has been finished.
+    requestPersistentStorage() {
+	if (this.persistRequested || !navigator.storage?.persist) {
+	    return;
+	}
+	this.persistRequested = true;
+	navigator.storage.persisted()
+	    .then(persisted => persisted || navigator.storage.persist())
+	    .catch(e => console.error("Unable to request persistent storage", e));
+    }
+
     // Loads progress saved in cookies by older versions of the game.
     loadLevelsFromCookies() {
 	const decodedCookie = decodeURIComponent(document.cookie);
@@ -224,6 +237,7 @@ class LevelPicker {
 			this.game.setProgressCallback((progress) => {
 			    levelData.progress = progress;
 			    if (progress.finished) {
+				this.requestPersistentStorage();
 				// Display the thumbnail.
 				$thumbnail.css({
 				    "background-image": "url('"+thumbnail+"')"
