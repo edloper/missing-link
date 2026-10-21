@@ -86,8 +86,9 @@ class ToggleButton {
 	    }
 	    this.onClickCallback(this.isChecked());
 	}
-	this.$checkbox.mousedown(clickCallback);
-	this.$checkbox.on('touchstart', clickCallback);
+	// Use "change" (not mousedown/touchstart), which fires after the
+	// checkbox has been toggled.
+	this.$checkbox.on('change', clickCallback);
     }
 
     onClick(callback) {
