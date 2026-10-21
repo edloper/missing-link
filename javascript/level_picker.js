@@ -197,7 +197,10 @@ class LevelPicker {
 	this.$rows[row].append($thumbnail);	
 	fetch(url)
 	    .then(response => {
-		if (!response.ok) { console.error('Error fetching', url); }
+		if (!response.ok) {
+		    console.error('Error fetching', url, response.status);
+		    return;
+		}
 		response.text().then(value => {
 		    const root = JSON.parse(value);
 		    const title = root.extras.title;

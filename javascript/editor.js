@@ -374,7 +374,10 @@ class LevelEditor {
     loadFromUrl(url) {
 	fetch(url)
 	    .then(response => {
-		if (!response.ok) { console.error('Error fetching', url); }
+		if (!response.ok) {
+		    console.error('Error fetching', url, response.status);
+		    return;
+		}
 		response.text().then(value => {
 		    this.loadFromJson(value);
 		})
