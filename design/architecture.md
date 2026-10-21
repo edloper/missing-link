@@ -97,3 +97,4 @@ saving and `Game.resize()` all use it.
 - R6: Level JSON, references, colors and metadata are validated before clearing a game/editor graph; invalid imports preserve work and history.
 - R7: Dot deletion records its dependent triangles in one undo event, restoring the complete deletion with a single Undo.
 - R8: Triangle sampling clamps pixel coordinates to the canvas bounds, including right/bottom edges, preventing invalid saved colors.
+- R9: Cookie migration decodes only matching progress values and isolates malformed values instead of decoding all site cookies.

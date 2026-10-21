@@ -9,13 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R9', 'malformed percent escapes in unrelated cookies do not prevent startup', () => {
-    const api = load({document: {cookie: 'unrelated=100%'}});
-    const picker = makePicker(api);
-    picker.load();
-    assert.equal(picker.savedData.levels.a.locked, false);
-});
-
 bug('R10', 'triangle overlap detection rejects identical triangles', () => {
     const {trianglesOverlap} = load();
     const tri = [{x: 0, y: 0}, {x: 10, y: 0}, {x: 0, y: 10}];

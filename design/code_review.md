@@ -166,6 +166,8 @@ hidden game file input has the same decoding pattern.
 
 ### R9 — Low: one malformed cookie escape prevents migration
 
+**Fixed:** Cookie migration decodes only matching progress values and isolates malformed values instead of decoding all site cookies.
+
 `javascript/level_picker.js:295`
 
 The entire cookie string is decoded outside error handling. With no stored

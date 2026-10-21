@@ -94,6 +94,9 @@ test('cookie parser handles spaces, exact names, missing and malformed values', 
     assert.deepEqual(plain(picker.loadCookie('x={}; MissingLink_a={"v":1}', 'MissingLink_a')), {v: 1});
     assert.equal(picker.loadCookie('MissingLink_ab={}', 'MissingLink_a'), null);
     assert.equal(picker.loadCookie('MissingLink_a={', 'MissingLink_a'), null);
+    assert.equal(picker.loadCookie('MissingLink_a=%broken', 'MissingLink_a'), null);
+    assert.deepEqual(plain(picker.loadCookie('unrelated=100%; MissingLink_a=%7B%22v%22%3A1%7D',
+	'MissingLink_a')), {v: 1});
 });
 
 test('storage failures do not throw during load or save', () => {

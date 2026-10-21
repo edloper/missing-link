@@ -320,12 +320,11 @@ class LevelPicker {
 	    .catch(e => console.error("Unable to request persistent storage", e));
     }
 
-    // Loads progress saved in cookies by older versions of the game.
+    // Decode each matching value independently; unrelated cookies may contain %.
     loadLevelsFromCookies() {
-	const decodedCookie = decodeURIComponent(document.cookie);
 	const levels = {};
 	for (const levelUrl of this.levelUrls) {
-	    const levelData = this.loadCookie(decodedCookie, "MissingLink_"+levelUrl);
+	    const levelData = this.loadCookie(document.cookie, "MissingLink_"+levelUrl);
 	    if (isValidSavedLevel(levelData)) {
 		levels[levelUrl] = levelData;
 	    }
@@ -333,17 +332,17 @@ class LevelPicker {
 	return levels;
     }
 
-    // Loads a cookie with a given name, given the decoded document.cookie.
-    loadCookie(decodedCookie, cookieName) {
+    // Loads a cookie with a given name, given document.cookie.
+    loadCookie(cookieString, cookieName) {
 	const prefix = cookieName+"=";
-	for (let cookie of decodedCookie.split(';')) {
+	for (let cookie of cookieString.split(';')) {
 	    while (cookie.charAt(0) == ' ') {
 		cookie = cookie.substring(1);  // Trim leading space
 	    }
 	    if (cookie.indexOf(prefix) == 0) {
 		const jsonString = cookie.substring(prefix.length, cookie.length);
 		try {
-		    return JSON.parse(jsonString);
+		    return JSON.parse(decodeURIComponent(jsonString));
 		} catch (e) {
 		    console.error("Unable to parse cookie", cookieName, e);
 		    return null;

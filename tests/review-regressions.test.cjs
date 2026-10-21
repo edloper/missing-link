@@ -104,3 +104,10 @@ test('R8: out-of-canvas triangle sampling returns finite color components', () =
     assert.ok(Object.values(color).every(Number.isFinite));
 });
 
+test('R9: malformed percent escapes in unrelated cookies do not prevent startup', () => {
+    const api = load({document: {cookie: 'unrelated=100%'}});
+    const picker = makePicker(api);
+    picker.load();
+    assert.equal(picker.savedData.levels.a.locked, false);
+});
+
