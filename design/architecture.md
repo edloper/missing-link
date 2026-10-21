@@ -108,3 +108,4 @@ saving and `Game.resize()` all use it.
 - R17: PNG string encoding uses a marker and explicit length to preserve empty strings and NULs; decoding still accepts legacy zero-terminated PNGs without leaking globals.
 - R18: A ToggleButton without a registered callback uses a no-op callback and remains interactive.
 - R19: Thumbnail decode/canvas errors reject; editor export always restores prior dot visibility and image opacity, and Save reports failures.
+- R20: Game/editor JSON file inputs read UTF-8 text directly instead of passing base64 byte strings to JSON.parse.

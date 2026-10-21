@@ -148,17 +148,13 @@ class Game {
 	    const reader = new FileReader();
 	    reader.addEventListener(
 		"load", () => {
-		    // TODO: check if reader.result starts with:
-		    // "data:application/json;base64,"
-		    const base64Data = reader.result.split(',')[1];
-		    const jsonString = atob(base64Data);
-		    this.loadFromJson(jsonString);
+		    this.loadFromJson(reader.result);
 		},
 		false,
 	    );
 
 	    if (file) {
-		reader.readAsDataURL(file);
+		reader.readAsText(file, 'UTF-8');
 	    }
 	});
 

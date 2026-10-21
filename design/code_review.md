@@ -165,6 +165,8 @@ thumbnail conversion also has a passing browser test.
 
 ### R20 — Medium: JSON file import corrupts non-ASCII text
 
+**Fixed:** Game/editor JSON file inputs read UTF-8 text directly instead of passing base64 byte strings to JSON.parse.
+
 `javascript/editor.js:141`, `javascript/game.js:142`
 
 FileReader reads a data URL, then atob produces a byte string passed directly

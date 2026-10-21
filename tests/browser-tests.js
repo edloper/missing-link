@@ -297,7 +297,7 @@ window.runTests = async function(group, report) {
 	    await waitUntil(() => document.getElementById('editorTitle').value !== TEST_LEVEL.extras.title,
 		'file reader did not finish');
 	    equal(document.getElementById('editorTitle').value, data.extras.title);
-	}, 'R20');
+	}); // R20 regression
 	test('loading a JSON filename uses a single .json suffix on the next save', () => {
 	    editor.loadFromJson(JSON.stringify(TEST_LEVEL), 'fixture.json');
 	    equal(document.getElementById('editorSaveFileName').value, 'fixture');

@@ -8,7 +8,6 @@ fixed.
 See `code_review.md` for reproduction details and repair status. Remaining
 reproduced issues:
 
-- R20: JSON file import corrupts non-ASCII text.
 - R21: import/save doubles the filename suffix.
 
 Inspection/data follow-up remains: R22 published level coordinates; R23

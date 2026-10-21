@@ -143,11 +143,7 @@ class LevelEditor {
 	    const reader = new FileReader();
 	    reader.addEventListener(
 		"load", () => {
-		    // TODO: check if reader.result starts with:
-		    // "data:application/json;base64,"
-		    const base64Data = reader.result.split(',')[1];
-		    const jsonString = atob(base64Data);
-		    this.loadFromJson(jsonString, file.name);
+		    this.loadFromJson(reader.result, file.name);
 		    $("#editorLoad").val('');
 		    this.setImageOpacity(this.imageOpacity);
 		},
@@ -155,7 +151,7 @@ class LevelEditor {
 	    );
 
 	    if (file) {
-		reader.readAsDataURL(file);
+		reader.readAsText(file, 'UTF-8');
 	    }
 	});
 	$("#editorLoadBackground").change(() => {
