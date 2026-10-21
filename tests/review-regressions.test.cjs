@@ -84,3 +84,14 @@ test('R6: malformed level import preserves the previous graph', () => {
     assert.equal(game.graph.dots.length, level.dots.length);
 });
 
+test('R7: one undo restores a deleted editor dot AND its triangles', () => {
+    const api = load();
+    const game = makeGame(api);
+    const editor = Object.create(api.LevelEditor.prototype);
+    Object.assign(editor, {graph: game.graph, history: [], selection: [],
+	colorLookupCanvas: {loaded: false}, updateWarnings() {}});
+    editor.removeDot(editor.graph.dots[0]);
+    editor.undo();
+    assert.equal(editor.graph.tris.length, 2);
+});
+

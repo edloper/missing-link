@@ -96,6 +96,8 @@ Bounds use `this.zoomLevel` before applying the new factor. Zooming from 1 to
 
 ### R7 — Medium: dot deletion is not one undoable editor action
 
+**Fixed:** Dot deletion records its dependent triangles in one undo event, restoring the complete deletion with a single Undo.
+
 `javascript/editor.js:248`, `javascript/editor.js:441`
 
 Deleting a dot records each triangle deletion, then a separate dot deletion.

@@ -258,7 +258,13 @@ class LevelEditor {
 		this.undoError("Cound not find dot");
 	    }
 	} else if (action == "removeDot") {
-	    this.addDot(args.x, args.y);
+	    const dot = this.addDot(args.x, args.y);
+	    for (const tri of args.tris) {
+		const corners = tri.corners.map(p =>
+		    p.x === args.x && p.y === args.y ? dot : this.findDot(p.x, p.y));
+		this.addTri(corners, tri.color);
+	    }
+	    this.updateWarnings();
 	} else if (action == "moveDot") {
 	    var dot = this.findDot(args.destination.x, args.destination.y);
 	    if (dot) {
@@ -440,9 +446,11 @@ class LevelEditor {
     }
 
     removeDot(dot) {
-	dot.tris.forEach(tri => this.removeTri(tri));
+	const tris = dot.tris.map(tri => ({
+	    corners: tri.corners.map(c => ({x: c.x, y: c.y})), color: tri.color,
+	}));
     	this.graph.removeDot(dot);
-	this.history.push(new EditorHistoryEvent('removeDot', {x: dot.x, y: dot.y}));
+	this.history.push(new EditorHistoryEvent('removeDot', {x: dot.x, y: dot.y, tris: tris}));
 	this.selection = this.selection.filter(obj => obj !== dot);
 	this.updateWarnings();
     }

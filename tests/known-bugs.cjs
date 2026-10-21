@@ -9,16 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R7', 'one undo restores a deleted editor dot AND its triangles', () => {
-    const api = load();
-    const game = makeGame(api);
-    const editor = Object.create(api.LevelEditor.prototype);
-    Object.assign(editor, {graph: game.graph, history: [], selection: [], updateWarnings() {}});
-    editor.removeDot(editor.graph.dots[0]);
-    editor.undo();
-    assert.equal(editor.graph.tris.length, 2);
-});
-
 bug('R8', 'out-of-canvas triangle sampling returns finite color components', () => {
     const api = load();
     const lookup = Object.create(api.ColorLookupCanvas.prototype);

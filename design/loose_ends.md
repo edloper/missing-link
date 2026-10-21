@@ -8,7 +8,6 @@ fixed.
 See `code_review.md` for reproduction details and repair status. Remaining
 reproduced issues:
 
-- R7: dot deletion is not one undoable editor action.
 - R8: color sampling can produce invalid saved colors.
 - R14: shortcuts conflict with browser/text editing.
 - R15: graph transforms bypass and invalidate undo.

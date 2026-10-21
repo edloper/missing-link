@@ -229,7 +229,7 @@ window.runTests = async function(group, report) {
 	    editor.removeDot(editor.graph.dots[0]);
 	    editor.undo();
 	    equal(editor.graph.tris.length, 2);
-	}, 'R7');
+	}); // R7 regression
 	test('graph transforms can be undone with Ctrl-Z', () => {
 	    editor.transformGraph(.95);
 	    editor.undo();
