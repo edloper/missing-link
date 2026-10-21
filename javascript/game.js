@@ -164,6 +164,7 @@ class Game {
 	$("#gameHint")
 	    .mousedown(e => { this.startHint(); e.preventDefault(); })
 	    .on('touchstart', e => { this.startHint(); e.preventDefault(); })
+	$(window).on('mouseup touchend', e => { this.endHint(); });
 	new ToggleButton($("#gameEasyMode"), {
 	    label: "Easy Mode",
 	    height: 30, width: 80,
@@ -329,8 +330,6 @@ class Game {
 	
 	// If you hold down hint button, then do rapid-fire hints.
 	this.holdingDownHint = true;
-	$(window).mouseup(e => {this.endHint(); })
-	$(window).on('touchend', e => { this.endHint(); })
 	const nextHint = () => {
 	    if (this.holdingDownHint) {
 		this.hint();
