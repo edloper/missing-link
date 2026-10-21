@@ -105,7 +105,7 @@ class LevelEditor {
 	this.backgroundColor = '#eee'
 	this.draw.css({background: this.backgroundColor, border: '1px solid black'});
 	this.draw.node.classList.add("graph");
-	this.graph = new Graph(this.draw, {clickCircleRadius: 12} );
+	this.graph = new Graph(this.draw, {clickCircleRadius: 12, padding: 0});
 	this.selection = []  // up to 0-3 dots.
 	this.mouseHandler = new MouseHandler(this);
 	this.image = null;

@@ -8,6 +8,11 @@ class Graph {
 	this.alpha = 0.5;
 	this.dotSize = options.dotSize ?? 1.0;
 	this.clickCircleRadius = options.clickCircleRadius ?? 20;
+	// Space to leave around the level.  If null, use the level's own
+	// padding (default 20).  The editor uses 0 so dots line up with the
+	// background image.
+	this.padding = options.padding ?? null;
+	this.levelPadding = undefined;  // The "padding" value from the level json.
 
 	// Place each object type before its layerMarker in the stacking order.
 	this.layerMarkers = {
@@ -24,6 +29,7 @@ class Graph {
     clear() {
 	// Tris and edges depend on dots, so get removed automatically.
 	this.dots.forEach(dot => this.removeDot(dot));
+	this.levelPadding = undefined;
     }
 
     addTri(corners, color, highlight = false) {
@@ -93,9 +99,20 @@ class Graph {
 	return stringToPNG(this.saveToJson(extras));
     }
     
+    // Returns the transform from level coordinates (0-1) to canvas
+    // coordinates: canvas = level * scale + offset.
+    levelTransform(levelPadding) {
+	const padding = this.padding ?? levelPadding ?? 20;
+	const width = this.draw.width() - (2 * padding);
+	const height = this.draw.height() - (2 * padding);
+	const scale = Math.min(width, height);
+	const dx = ((width < height) ? 0 : (width-height)/2) + padding;
+	const dy = ((height < width) ? 0 : (height-width)/2) + padding;
+	return {scale: scale, dx: dx, dy: dy};
+    }
+
     saveToJson(extras = null) {
-	const width = this.draw.width();
-	const height = this.draw.height();
+	const t = this.levelTransform(this.levelPadding);
 	if (extras === null) {
 	    extras = {};
 	}
@@ -104,11 +121,15 @@ class Graph {
 	}
 	var root = {
 	    version: 2,
-	    dots: this.dots.map(dot => ({x: dot.x / width, y: dot.y / height})),
+	    dots: this.dots.map(dot => ({x: (dot.x - t.dx) / t.scale,
+					 y: (dot.y - t.dy) / t.scale})),
 	    tris: this.tris.map(
 		tri => ({color: tri.color,
 			 corners: tri.corners.map(dot => dot._index)})),
 	    extras: extras,
+	}
+	if (this.levelPadding !== undefined) {
+	    root.padding = this.levelPadding;
 	}
 	console.log("Saved a level");
 	this.dots.forEach(dot => delete dot._index);
@@ -117,17 +138,13 @@ class Graph {
     
     loadFromJson(s, addDot, addTri) {
 	const root = JSON.parse(s);
-	const padding = root.padding ?? 20;
 	const version = root.version ?? 1;
-	const width = this.draw.width() - (2 * padding);
-	const height = this.draw.height() - (2 * padding);
-	const scale = Math.min(width, height);
-	const dx = ((width < height) ? 0 : (width-height)/2) + padding;
-	const dy = ((height < width) ? 0 : (height-width)/2) + padding;
+	const t = this.levelTransform(root.padding);
 	this.clear();
+	this.levelPadding = root.padding;
 	for (const dot_json of root.dots) {
-	    const x = dot_json.x * scale + dx;
-	    const y = dot_json.y * scale + dy;
+	    const x = dot_json.x * t.scale + t.dx;
+	    const y = dot_json.y * t.scale + t.dy;
 	    const dot = (addDot ?? this.addDot)(x, y);
 	}
 	for (const tri_json of root.tris) {
