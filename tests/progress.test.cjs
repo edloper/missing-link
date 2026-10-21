@@ -106,6 +106,26 @@ test('storage failures do not throw during load or save', () => {
     assert.equal(picker.save(), false);
 });
 
+test('invalid saved records are discarded while valid progress is retained', () => {
+    const api = load();
+    api.storage.set(key, JSON.stringify({levels: {
+	a: {progress: 42}, b: {progress: {edges: [[0, 1]], percentDone: 25}},
+    }}));
+    const picker = makePicker(api);
+    picker.load();
+    assert.equal(picker.savedData.levels.a.progress.percentDone, 0);
+    assert.deepEqual(plain(picker.savedData.levels.b.progress.edges), [[0, 1]]);
+});
+
+test('save codes reject malformed nested progress and edge shapes', async () => {
+    const api = load();
+    for (const levels of [[], {a: null}, {a: {progress: []}},
+	{a: {progress: {finished: 'yes'}}}, {a: {progress: {percentDone: 101}}},
+	{a: {progress: {edges: [null]}}}, {a: {progress: {edges: [[0, '1']]}}}]) {
+	await assert.rejects(api.decodeSaveCode('ML0-' + btoa(JSON.stringify({levels}))));
+    }
+});
+
 test('persistence is requested once and only when not already granted', async () => {
     for (const granted of [true, false]) {
 	let calls = 0;

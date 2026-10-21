@@ -11,6 +11,31 @@
 const PROGRESS_STORAGE_KEY = "MissingLink_progress";
 const HIDE_HOME_SCREEN_TIP_KEY = "MissingLink_hideHomeScreenTip";
 
+function isProgressObject(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+// Missing fields are allowed for older saves and receive defaults on load.
+function isValidSavedLevel(data) {
+    if (!isProgressObject(data) ||
+	(data.locked !== undefined && typeof data.locked !== 'boolean') ||
+	(data.index !== undefined && (!Number.isInteger(data.index) || data.index < 0))) {
+	return false;
+    }
+    if (data.progress === undefined) { return true; }
+    const progress = data.progress;
+    if (!isProgressObject(progress) ||
+	(progress.finished !== undefined && typeof progress.finished !== 'boolean') ||
+	(progress.percentDone !== undefined &&
+	 (!Number.isFinite(progress.percentDone) || progress.percentDone < 0 || progress.percentDone > 100))) {
+	return false;
+    }
+    return progress.edges === undefined ||
+	(Array.isArray(progress.edges) && progress.edges.every(edge =>
+	    Array.isArray(edge) && edge.length === 2 &&
+	    edge.every(index => Number.isInteger(index) && index >= 0)));
+}
+
 // Save codes are "ML1-" followed by the progress json, deflate-compressed
 // and base64-encoded ("ML0-" if the browser can't compress).
 async function encodeSaveCode(data) {
@@ -59,8 +84,8 @@ async function decodeSaveCode(code) {
     } catch (e) {
 	throw new Error("it isn't complete (check that you copied all of it)");
     }
-    if (typeof data?.levels != "object" || data.levels === null) {
-	throw new Error("it doesn't contain any progress");
+    if (!isProgressObject(data?.levels) || !Object.values(data.levels).every(isValidSavedLevel)) {
+	throw new Error("it doesn't contain valid progress");
     }
     return data;
 }
@@ -240,7 +265,12 @@ class LevelPicker {
     load() {
 	let levels = null;
 	try {
-	    levels = JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY))?.levels;
+	    const stored = JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY))?.levels;
+	    if (isProgressObject(stored)) {
+		// Retain usable records if another record was corrupted.
+		levels = Object.fromEntries(Object.entries(stored).filter(
+		    ([url, data]) => isValidSavedLevel(data)));
+	    }
 	} catch (e) {
 	    console.error("Unable to load progress", e);
 	}
@@ -297,7 +327,7 @@ class LevelPicker {
 	const levels = {};
 	for (const levelUrl of this.levelUrls) {
 	    const levelData = this.loadCookie(decodedCookie, "MissingLink_"+levelUrl);
-	    if (levelData) {
+	    if (isValidSavedLevel(levelData)) {
 		levels[levelUrl] = levelData;
 	    }
 	}

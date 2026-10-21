@@ -9,27 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R3', 'structurally invalid saved progress cannot break the next startup', async () => {
-    const api = load();
-    const code = 'ML0-' + btoa(JSON.stringify({levels: {a: {progress: 42}}}));
-    // The decoder should reject a code that the loader cannot safely consume.
-    await assert.rejects(api.decodeSaveCode(code));
-});
-
-bug('R3', 'localStorage with a primitive levels value recovers to defaults', () => {
-    const api = load();
-    api.storage.set('MissingLink_progress', '{"levels":42}');
-    const picker = makePicker(api);
-    picker.load();
-    assert.equal(picker.savedData.levels.a.locked, false);
-});
-
-bug('R3', 'malformed progress edges are skipped without throwing', () => {
-    const game = makeGame(load());
-    game.loadProgress({edges: [null, [0, 1]]});
-    assert.equal(game.graph.edges.length, 1);
-});
-
 bug('R4', 'a missing predecessor is treated as unfinished when recomputing locks', () => {
     const api = load();
     api.storage.set('MissingLink_progress', '{"levels":{"b":{"locked":true}}}');

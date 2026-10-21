@@ -25,3 +25,24 @@ test('R2: a dot touchstart uses touch coordinates in the game', () => {
     assert.deepEqual(plain(game.mouseHandler.clickPoint), {x: 15, y: 25});
 });
 
+test('R3: structurally invalid saved progress cannot break the next startup', async () => {
+    const api = load();
+    const code = 'ML0-' + btoa(JSON.stringify({levels: {a: {progress: 42}}}));
+    // The decoder should reject a code that the loader cannot safely consume.
+    await assert.rejects(api.decodeSaveCode(code));
+});
+
+test('R3: localStorage with a primitive levels value recovers to defaults', () => {
+    const api = load();
+    api.storage.set('MissingLink_progress', '{"levels":42}');
+    const picker = makePicker(api);
+    picker.load();
+    assert.equal(picker.savedData.levels.a.locked, false);
+});
+
+test('R3: malformed progress edges are skipped without throwing', () => {
+    const game = makeGame(load());
+    game.loadProgress({edges: [null, [0, 1]]});
+    assert.equal(game.graph.edges.length, 1);
+});
+

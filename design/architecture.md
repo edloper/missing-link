@@ -91,3 +91,4 @@ saving and `Game.resize()` all use it.
 
 - R1: Hint and Undo cancel any unfinished drag before inspecting connected edges.
 - R2: Game dots and editor dots/triangles route touch events through the touch coordinate and pinch handlers.
+- R3: Save codes validate nested progress; startup drops invalid records while retaining valid records, and edge restoration skips malformed pairs.

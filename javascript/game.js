@@ -95,10 +95,15 @@ class Game {
     }
 
     loadProgress(progress) {
-	if (progress.finished) {
+	if (!progress || typeof progress !== 'object' || Array.isArray(progress)) { return; }
+	if (progress.finished === true) {
 	    this.hint(/*finishLevel=*/true);
 	} else {
-	    for (const edge of progress.edges ?? []) {
+	    for (const edge of Array.isArray(progress.edges) ? progress.edges : []) {
+		if (!Array.isArray(edge) || edge.length !== 2 ||
+		    !edge.every(index => Number.isInteger(index) && index >= 0)) {
+		    continue;
+		}
 		const start = this.graph.dots[edge[0]];
 		const end = this.graph.dots[edge[1]];
 		// Skip edges that don't fit the level (e.g., if it was edited

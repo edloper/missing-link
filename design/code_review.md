@@ -31,6 +31,8 @@ depend on layout; this is not a real-phone test.
 
 ### R3 — High: invalid saved data can prevent startup
 
+**Fixed:** Save codes validate nested progress; startup drops invalid records while retaining valid records, and edge restoration skips malformed pairs.
+
 `javascript/level_picker.js:62`, `javascript/level_picker.js:233`,
 `javascript/game.js:97`
 
