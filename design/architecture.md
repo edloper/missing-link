@@ -109,3 +109,4 @@ saving and `Game.resize()` all use it.
 - R18: A ToggleButton without a registered callback uses a no-op callback and remains interactive.
 - R19: Thumbnail decode/canvas errors reject; editor export always restores prior dot visibility and image opacity, and Save reports failures.
 - R20: Game/editor JSON file inputs read UTF-8 text directly instead of passing base64 byte strings to JSON.parse.
+- R21: Imported filenames omit JSON suffixes in the name field, and downloads always use exactly one .json extension.

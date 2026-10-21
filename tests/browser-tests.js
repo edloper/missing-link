@@ -301,7 +301,17 @@ window.runTests = async function(group, report) {
 	test('loading a JSON filename uses a single .json suffix on the next save', () => {
 	    editor.loadFromJson(JSON.stringify(TEST_LEVEL), 'fixture.json');
 	    equal(document.getElementById('editorSaveFileName').value, 'fixture');
-	}, 'R21');
+	}); // R21 regression
+	test('successful export uses one filename suffix and restores dot visibility', async () => {
+	    const click = HTMLAnchorElement.prototype.click;
+	    let filename;
+	    HTMLAnchorElement.prototype.click = function() { filename = this.download; };
+	    try { await editor.saveLevel('fixture.JSON.json'); }
+	    finally { HTMLAnchorElement.prototype.click = click; }
+	    equal(filename, 'fixture.json');
+	    equal(editor.graph.dots[0].circle.node.style.display, '');
+	    ok(editor.thumbnailPngDataUrl.startsWith('data:image/png'), 'export generates thumbnail');
+	});
 	test('malformed editor import preserves the level being edited', () => {
 	    try { editor.loadFromJson('{'); } catch (e) {}
 	    equal(editor.graph.dots.length, 4);

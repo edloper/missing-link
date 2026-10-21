@@ -251,6 +251,8 @@ works. Browser reproduction uses a standalone instance.
 
 ### R21 — Low: import/save doubles the filename suffix
 
+**Fixed:** Imported filenames omit JSON suffixes in the name field, and downloads always use exactly one .json extension.
+
 `javascript/editor.js:403`, `javascript/editor.js:343`
 
 Import populates the filename field with file.name, including .json. Save

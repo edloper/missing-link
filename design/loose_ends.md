@@ -8,7 +8,6 @@ fixed.
 See `code_review.md` for reproduction details and repair status. Remaining
 reproduced issues:
 
-- R21: import/save doubles the filename suffix.
 
 Inspection/data follow-up remains: R22 published level coordinates; R23
 load/storage error UX; R24 timer/listener/gesture cleanup; R25 accessibility

@@ -354,7 +354,7 @@ class LevelEditor {
 		const blob = new Blob([jsonString], { type: 'application/json' });
 		const link = document.createElement("a");
 		link.href = URL.createObjectURL(blob);
-		link.download = filename + '.json';
+		link.download = filename.replace(/(?:\.json)+$/i, '') + '.json';
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
@@ -420,7 +420,7 @@ class LevelEditor {
 			  this.backgroundImageZoom);
 	}
 	if (filename) {
-	    $("#editorSaveFileName").val(filename);
+	    $("#editorSaveFileName").val(filename.replace(/(?:\.json)+$/i, ''));
 	}
 	if (extras.backgroundColor) {
 	    this.setBackgroundColor(extras.backgroundColor);
