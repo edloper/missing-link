@@ -101,3 +101,4 @@ saving and `Game.resize()` all use it.
 - R10: Overlap warnings use separating axes to detect duplicate/contained triangles while allowing shared edges and corners.
 - R11: Point inclusion rejects zero-area triangles; sampling them uses neutral gray. Circle proximity uses the nearest point on the finite segment, including endpoints and zero-length segments.
 - R12: Graph.loadFromJson calls its own addDot/addTri methods with the graph receiver when custom callbacks are omitted.
+- R13: Moving/resizing a dot retains its configured hit target radius multiplied by dotSize.

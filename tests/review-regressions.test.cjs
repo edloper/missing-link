@@ -149,3 +149,10 @@ test('R12: Graph.loadFromJson works with its optional callbacks omitted', () => 
     assert.equal(graph.dots.length, 4);
 });
 
+test('R13: dot hit target keeps its dotSize scale after a move', () => {
+    const {Graph} = load();
+    const graph = new Graph(drawing(), {dotSize: 2, clickCircleRadius: 20});
+    const dot = graph.addDot(10, 10);
+    dot.move(20, 20);
+    assert.equal(dot.clickCircle.attr('r'), 40);
+});

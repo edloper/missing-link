@@ -397,7 +397,7 @@ class Dot {
 	this.circle.radius(radius);
 	this.clickCircle.radius(0);
 	this.clickCircle.move(x, y);
-	this.clickCircle.radius(this.graph.clickCircleRadius);
+	this.clickCircle.radius(this.graph.clickCircleRadius * this.graph.dotSize);
 	this.text.amove(x, y);
 	this.tris.forEach((tri) => tri.update());
     }

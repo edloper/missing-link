@@ -210,6 +210,8 @@ Current controllers pass wrappers and avoid this path. Node reproduction.
 
 ### R13 — Low: moving a scaled dot changes its hit target
 
+**Fixed:** Moving/resizing a dot retains its configured hit target radius multiplied by dotSize.
+
 `javascript/graph.js:360`
 
 Construction uses clickCircleRadius * dotSize, but move resets to unscaled
