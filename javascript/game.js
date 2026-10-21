@@ -213,8 +213,30 @@ class Game {
     }
 
     resize(width, height) {
+	this.cancelDrag();
+	const oldTransform = this.graph.levelTransform(this.graph.levelPadding);
+	this.width = width;  // used by mouse_controller.
+	this.height = height;  // used by mouse_controller.
 	this.$container.find(".controls").css({width: width});
 	this.draw.size(width, height);
+
+	// Move the dots so the level stays centered and fits the new size.
+	const newTransform = this.graph.levelTransform(this.graph.levelPadding);
+	const scale = newTransform.scale / oldTransform.scale;
+	for (const dot of this.graph.dots) {
+	    dot.move((dot.x - oldTransform.dx) * scale + newTransform.dx,
+		     (dot.y - oldTransform.dy) * scale + newTransform.dy);
+	}
+	for (const edge of this.graph.edges) {
+	    if (edge.end) {
+		edge.drawTo(edge.end.x, edge.end.y);
+	    }
+	}
+
+	// Reset the zoom, since the old view may not fit the new size.
+	this.mouseHandler.zoomLevel = 1;
+	this.mouseHandler.viewOffset = {x: 0, y: 0};
+	this.mouseHandler.updateViewbox();
     }
 
     loadFromPng(dataUrl) {
