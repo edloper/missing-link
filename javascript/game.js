@@ -167,6 +167,9 @@ class Game {
 	    this.setEasyMode(value);
 	});
 	document.addEventListener('keydown', event => {
+	    if (!this.$container.is(':visible')) {
+		return;  // Ignore shortcuts while the level picker is showing.
+	    }
 	    if ( (event.ctrlKey || event.metaKey) && event.key === 'z' ) {
 		this.undo();
 	    }
