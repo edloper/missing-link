@@ -129,13 +129,13 @@ class LevelEditor {
 	$("#editorSaveFileName").keypress((e) => {
 	    const filename = $("#editorSaveFileName").val();
 	    if (e.which == 13 && filename != "") {
-		this.saveLevel(filename);
+		this.saveLevel(filename).catch(error => alert('Unable to save level: ' + error.message));
 	    }
 	});
 	$("#editorSaveButton").click(() => {
 	    const filename = $("#editorSaveFileName").val();
 	    if (filename) {
-		this.saveLevel(filename);
+		this.saveLevel(filename).catch(error => alert('Unable to save level: ' + error.message));
 	    }
 	});
 	$("#editorLoad").change(() =>{
@@ -342,13 +342,15 @@ class LevelEditor {
     saveLevel(filename) {
 	// Get the thumbnail and convert to png.
 	const svg = $(this.container).find("svg")[0];
+	const visibility = this.graph.dots.flatMap(dot => [dot.circle, dot.clickCircle, dot.text])
+	    .map(shape => [shape, shape.node.style.display]);
+	const image = this.image;
+	const opacity = image?.attr('opacity');
 	this.graph.dots.forEach(dot => dot.hide());
 	if (this.image) { this.image.opacity(0); }
-	svgToPng(svg)
+	return svgToPng(svg)
 	    .then(pngDataUrl => {
 		// Generate json (including thumbnail).
-		this.graph.dots.forEach(dot => dot.show());
-		if (this.image) { this.image.opacity(this.imageOpacity/100.0); }
 		this.thumbnailPngDataUrl = pngDataUrl;
 		const jsonString = this.saveToJson();
 		
@@ -361,6 +363,10 @@ class LevelEditor {
 		link.click();
 		document.body.removeChild(link);
 		URL.revokeObjectURL(link.href);  // clean-up.
+	    })
+	    .finally(() => {
+		for (const [shape, display] of visibility) { shape.node.style.display = display; }
+		if (image) { image.attr('opacity', opacity ?? 1); }
 	    });
     }
 

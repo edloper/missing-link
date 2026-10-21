@@ -153,6 +153,8 @@ slider handles. Browser test loads hue 30 and observes slider hue 180.
 
 ### R19 — Medium: image failure can leave thumbnail export pending
 
+**Fixed:** Thumbnail decode/canvas errors reject; editor export always restores prior dot visibility and image opacity, and Save reports failures.
+
 `javascript/svg_to_png.js:21`, `javascript/editor.js:326`
 
 svgToPng registers onload without onerror, so its promise never settles after

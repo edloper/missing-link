@@ -230,6 +230,28 @@ window.runTests = async function(group, report) {
 	    editor.undo();
 	    equal(editor.graph.tris.length, 2);
 	}); // R7 regression
+	test('failed editor export restores visible and hidden dot elements', async () => {
+	    editor.graph.dots[1].hide();
+	    const convert = svgToPng;
+	    svgToPng = () => Promise.reject(new Error('test export failure'));
+	    let rejected = false;
+	    try { await editor.saveLevel('fixture'); } catch (error) { rejected = true; }
+	    finally { svgToPng = convert; }
+	    ok(rejected, 'export failure must reject');
+	    equal(editor.graph.dots[0].circle.node.style.display, '');
+	    equal(editor.graph.dots[1].circle.node.style.display, 'none');
+	});
+	test('synchronous thumbnail setup failure also restores editor visibility', async () => {
+	    const Serializer = window.XMLSerializer;
+	    window.XMLSerializer = class {
+		serializeToString() { throw new Error('test serialization failure'); }
+	    };
+	    let rejected = false;
+	    try { await editor.saveLevel('fixture'); } catch (error) { rejected = true; }
+	    finally { window.XMLSerializer = Serializer; }
+	    ok(rejected, 'serialization failure must reject');
+	    equal(editor.graph.dots[0].circle.node.style.display, '');
+	});
 	test('graph transforms can be undone with Ctrl-Z', () => {
 	    editor.transformGraph(.95);
 	    editor.undo();
@@ -412,7 +434,7 @@ window.runTests = async function(group, report) {
 		]);
 		equal(outcome, 'rejected');
 	    } finally { window.Image = NativeImage; draw.remove(); }
-	}, 'R19');
+	}); // R19 regression
     }
 
     const asyncErrors = [];

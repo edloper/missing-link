@@ -8,7 +8,6 @@ fixed.
 See `code_review.md` for reproduction details and repair status. Remaining
 reproduced issues:
 
-- R19: image failure can leave thumbnail export pending.
 - R20: JSON file import corrupts non-ASCII text.
 - R21: import/save doubles the filename suffix.
 
