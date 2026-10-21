@@ -237,6 +237,8 @@ Unicode without NUL has a passing round-trip test.
 
 ### R18 — Low: optional ToggleButton callback is not callable
 
+**Fixed:** A ToggleButton without a registered callback uses a no-op callback and remains interactive.
+
 `javascript/toggle.js:4`, `javascript/toggle.js:87`
 
 The callback defaults to null and change invokes it unconditionally. A

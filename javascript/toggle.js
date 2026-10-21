@@ -2,7 +2,7 @@
 
 class ToggleButton {
     constructor(container, options = {}) {
-	this.onClickCallback = options.onClick ?? null;
+	this.onClickCallback = options.onClick ?? (() => {});
 	this.height = options.height ?? 40;
 	this.width = options.width ?? 80;
 	this.margin = options.margin ?? 10;

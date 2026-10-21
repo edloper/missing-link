@@ -398,7 +398,7 @@ window.runTests = async function(group, report) {
 	    catch (e) { error = e; }
 	    host.remove();
 	    if (error) { throw error; }
-	}, 'R18');
+	}); // R18 regression
 	test('SVG conversion rejects image load errors instead of leaving export pending', async () => {
 	    const NativeImage = window.Image;
 	    const draw = SVG().addTo(container).size(20, 20);

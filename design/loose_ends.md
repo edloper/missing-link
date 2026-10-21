@@ -10,7 +10,6 @@ reproduced issues:
 
 - R19: image failure can leave thumbnail export pending.
 - R20: JSON file import corrupts non-ASCII text.
-- R18: optional ToggleButton callback is not callable.
 - R21: import/save doubles the filename suffix.
 
 Inspection/data follow-up remains: R22 published level coordinates; R23
