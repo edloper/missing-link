@@ -373,8 +373,22 @@ window.runTests = async function(group, report) {
 	    }
 	});
 	test('PNG string round trip preserves embedded NUL characters', async () => {
-	    equal(await PNGToString(stringToPNG('a\0b')), 'a\0b');
-	}, 'R17');
+	    for (const text of ['', '\0', 'a\0b', '猫\0🎉']) {
+		equal(await PNGToString(stringToPNG(text)), text);
+	    }
+	}); // R17 regression
+	test('legacy PNG strings still decode with zero termination', async () => {
+	    const canvas = document.createElement('canvas');
+	    canvas.width = 4; canvas.height = 1;
+	    const ctx = canvas.getContext('2d');
+	    const pixels = ctx.createImageData(4, 1);
+	    for (let i = 0; i < 4; i++) {
+		const code = 'old\0'.charCodeAt(i);
+		pixels.data.set([0, code >> 8, code & 255, 255], 4*i);
+	    }
+	    ctx.putImageData(pixels, 0, 0);
+	    equal(await PNGToString(canvas.toDataURL()), 'old');
+	});
 	test('standalone ToggleButton can change without a registered callback', () => {
 	    const host = $('<div>').appendTo(container);
 	    const toggle = new ToggleButton(host, {margin: '0px'});

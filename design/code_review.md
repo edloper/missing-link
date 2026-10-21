@@ -226,6 +226,8 @@ controllers use dotSize 1. Node reproduction.
 
 ### R17 — Low: PNG string helper truncates embedded NULs
 
+**Fixed:** PNG string encoding uses a marker and explicit length to preserve empty strings and NULs; decoding still accepts legacy zero-terminated PNGs without leaking globals.
+
 `javascript/string_to_png.js:42`
 
 Zero is a terminator; `a\0b` round-trips as `a`. JSON escapes NUL, so normal

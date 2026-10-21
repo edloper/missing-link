@@ -105,3 +105,4 @@ saving and `Game.resize()` all use it.
 - R14: Handled game shortcuts prevent browser defaults; game/editor shortcuts leave input, textarea, select and editable text targets alone.
 - R15: Each graph scale/translation records original and destination coordinates so Undo restores the transform and preserves earlier undo actions.
 - R16: Level loads and background-color undo synchronize all picker sliders without generating extra history or recursive change callbacks.
+- R17: PNG string encoding uses a marker and explicit length to preserve empty strings and NULs; decoding still accepts legacy zero-terminated PNGs without leaking globals.
