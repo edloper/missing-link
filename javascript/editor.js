@@ -332,7 +332,7 @@ class LevelEditor {
 	    .then(pngDataUrl => {
 		// Generate json (including thumbnail).
 		this.graph.dots.forEach(dot => dot.show());
-		if (this.image) { this.image.opacity(this.imageOpacity); }
+		if (this.image) { this.image.opacity(this.imageOpacity/100.0); }
 		this.thumbnailPngDataUrl = pngDataUrl;
 		const jsonString = this.saveToJson();
 		
@@ -676,7 +676,7 @@ class LevelEditor {
 	    this.image = image;
 	    this.image.size(this.width, this.height);
 	    image.attr('preserveAspectRatio', 'xMidYMid slice');
-	    image.opacity(this.imageOpacity);
+	    image.opacity(this.imageOpacity/100.0);
 	    this.image.insertBefore(this.graph.layerMarkers.image);
 	    this.colorLookupCanvas.setImage(path);
 	    this.setBackgroundImageZoom(zoomLevel);
