@@ -215,3 +215,18 @@ test('resize preserves normalized geometry, edges, progress and resets viewport'
     assert.equal(game.mouseHandler.zoomLevel, 1);
     assert.deepEqual(plain(game.mouseHandler.viewOffset), {x: 0, y: 0});
 });
+
+test('invalid level shape, references and metadata leave existing state intact', () => {
+    const game = makeGame(load());
+    game.hint();
+    const before = game.graph.saveToJson(level.extras);
+    for (const data of [null, {}, {...level, dots: [null]},
+	{...level, tris: [{corners: [0, 1, 99]}]},
+	{...level, tris: [{corners: [0, 1, 2], color: 'red'}]},
+	{...level, extras: {backgroundColor: null}}, {...level, extras: {imageZoom: 'bad'}}]) {
+	assert.throws(() => game.loadFromJson(JSON.stringify(data)));
+	assert.equal(game.graph.saveToJson(level.extras), before);
+	assert.equal(game.graph.edges.length, 1);
+	assert.equal(game.history.length, 1);
+    }
+});

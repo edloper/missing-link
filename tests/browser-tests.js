@@ -267,7 +267,7 @@ window.runTests = async function(group, report) {
 	    try { editor.loadFromJson('{'); } catch (e) {}
 	    equal(editor.graph.dots.length, 4);
 	    equal(document.getElementById('editorTitle').value, TEST_LEVEL.extras.title);
-	}, 'R6');
+	}); // R6 regression
 	test('removing an image preserves triangle colors and undo can restore the image', async () => {
 	    const canvas = document.createElement('canvas');
 	    canvas.width = canvas.height = 10;

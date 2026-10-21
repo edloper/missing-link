@@ -262,6 +262,7 @@ class Game {
     }
     
     loadFromJson(jsonString) {
+	Graph.parseLevelJson(jsonString);
 	this.clear();
 	const extras = this.graph.loadFromJson(
 	    jsonString,

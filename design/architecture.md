@@ -94,3 +94,4 @@ saving and `Game.resize()` all use it.
 - R3: Save codes validate nested progress; startup drops invalid records while retaining valid records, and edge restoration skips malformed pairs.
 - R4: Progress defaults are populated before reconstructing locks, so missing predecessors stay unfinished and finished predecessors unlock new successor records.
 - R5: Zoom clamps offsets using the new magnification, keeping the cursor anchored and the viewport within the canvas.
+- R6: Level JSON, references, colors and metadata are validated before clearing a game/editor graph; invalid imports preserve work and history.

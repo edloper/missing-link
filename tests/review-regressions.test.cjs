@@ -78,3 +78,9 @@ test('R5: zooming out from an edge clamps to the NEW viewport bounds', () => {
     assert.deepEqual(plain(mouse.viewOffset), {x: 0, y: 0});
 });
 
+test('R6: malformed level import preserves the previous graph', () => {
+    const game = makeGame(load());
+    try { game.loadFromJson('{'); } catch (e) {}
+    assert.equal(game.graph.dots.length, level.dots.length);
+});
+

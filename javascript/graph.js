@@ -136,9 +136,39 @@ class Graph {
 	return JSON.stringify(root)
     }
     
-    loadFromJson(s, addDot, addTri) {
+    // Validate the entire document before any controller clears its old level.
+    static parseLevelJson(s) {
 	const root = JSON.parse(s);
-	const version = root.version ?? 1;
+	const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+	const validColor = color => object(color) && ['red', 'green', 'blue'].every(
+	    key => Number.isFinite(color[key]) && color[key] >= 0 && color[key] <= 255);
+	if (!object(root) || ![1, 2].includes(root.version ?? 1) ||
+	    !Array.isArray(root.dots) || !Array.isArray(root.tris) ||
+	    !root.dots.every(dot => object(dot) && Number.isFinite(dot.x) && Number.isFinite(dot.y)) ||
+	    !root.tris.every(tri => object(tri) && Array.isArray(tri.corners) &&
+		tri.corners.length === 3 && new Set(tri.corners).size === 3 &&
+		tri.corners.every(index => Number.isInteger(index) && index >= 0 && index < root.dots.length) &&
+		(tri.color == null || validColor(tri.color))) ||
+	    (root.padding !== undefined && (!Number.isFinite(root.padding) || root.padding < 0)) ||
+	    (root.extras !== undefined && !object(root.extras))) {
+	    throw new Error('Invalid level data');
+	}
+	const extras = root.extras ?? {};
+	const hsl = extras.backgroundColor;
+	if ((hsl !== undefined && (!object(hsl) ||
+	    !Number.isFinite(hsl.h) || hsl.h < 0 || hsl.h > 360 ||
+	    !Number.isFinite(hsl.s) || hsl.s < 0 || hsl.s > 100 ||
+	    !Number.isFinite(hsl.l) || hsl.l < 0 || hsl.l > 100)) ||
+	    ['title', 'imageFilename', 'thumbnail'].some(key =>
+		extras[key] != null && typeof extras[key] !== 'string') ||
+	    (extras.imageZoom !== undefined && (!Number.isFinite(extras.imageZoom) || extras.imageZoom <= 0))) {
+	    throw new Error('Invalid level metadata');
+	}
+	return root;
+    }
+
+    loadFromJson(s, addDot, addTri) {
+	const root = Graph.parseLevelJson(s);
 	const t = this.levelTransform(root.padding);
 	this.clear();
 	this.levelPadding = root.padding;
@@ -149,7 +179,7 @@ class Graph {
 	}
 	for (const tri_json of root.tris) {
 	    const corners = tri_json.corners.map(n => this.dots[n]);
-	    const tri = (addTri ?? this.addTri)(corners, tri_json.color ?? '#ff0000');
+	    const tri = (addTri ?? this.addTri)(corners, tri_json.color ?? {red: 255, green: 0, blue: 0});
 	}
 	return root.extras ?? {};
     }

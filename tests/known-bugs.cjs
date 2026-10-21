@@ -9,12 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R6', 'malformed level import preserves the previous graph', () => {
-    const game = makeGame(load());
-    try { game.loadFromJson('{'); } catch (e) {}
-    assert.equal(game.graph.dots.length, level.dots.length);
-});
-
 bug('R7', 'one undo restores a deleted editor dot AND its triangles', () => {
     const api = load();
     const game = makeGame(api);

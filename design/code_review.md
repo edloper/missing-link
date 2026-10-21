@@ -47,6 +47,8 @@ reproduces decoder, loader and edge errors.
 
 ### R6 — High: failed level import destroys the current graph
 
+**Fixed:** Level JSON, references, colors and metadata are validated before clearing a game/editor graph; invalid imports preserve work and history.
+
 `javascript/editor.js:387`, `javascript/game.js:259`, `javascript/graph.js:139`
 
 Both controllers clear the graph before parsing input. The editor also clears

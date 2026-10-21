@@ -385,6 +385,7 @@ class LevelEditor {
     }
     
     loadFromJson(jsonString, filename=null) {
+	Graph.parseLevelJson(jsonString);
 	const oldLevel = this.saveToJson();
 	this.clear();
 	const historyCopy = Array.from(this.history);
