@@ -651,7 +651,16 @@ class LevelEditor {
 	    this.colorLookupCanvas.clearImage();
 	} else {
 	    var image = this.draw.image(path);
-	    image.node.onerror = function() {
+	    image.node.onerror = () => {
+		// Personal photos are kept in backgrounds/personal/, which is
+		// not published.  Levels refer to them by filename only.
+		const personalPath = "backgrounds/personal/" + filename;
+		if (path.startsWith("backgrounds/") && path != personalPath) {
+		    path = personalPath;
+		    image.attr('href', path);
+		    this.colorLookupCanvas.setImage(path, this.backgroundImageZoom);
+		    return;
+		}
 		console.log("Unable to set image", path, filename);
 		image.remove();
 	    }

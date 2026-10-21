@@ -1,0 +1,7 @@
+# Editor backups and old copies
+*~
+*.old
+
+# Local-only files (everything committed here is published on the website)
+backgrounds/personal/
+todo.txt
