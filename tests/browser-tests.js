@@ -156,7 +156,7 @@ window.runTests = async function(group, report) {
 	    const event = new KeyboardEvent('keydown', {key: 'z', ctrlKey: true, cancelable: true});
 	    document.dispatchEvent(event);
 	    equal(event.defaultPrevented, true);
-	}, 'R14');
+	}); // R14 regression
     }
 
     if (group === 'editor') {
@@ -241,7 +241,7 @@ window.runTests = async function(group, report) {
 	    document.getElementById('editorTitle').dispatchEvent(new KeyboardEvent('keydown', {
 		key: 'z', ctrlKey: true, bubbles: true, cancelable: true}));
 	    equal(editor.graph.dots.length, 5);
-	}, 'R14');
+	}); // R14 regression
 	test('loading a level synchronizes the background color picker', () => {
 	    const data = {...TEST_LEVEL, extras: {...TEST_LEVEL.extras,
 		backgroundColor: {h: 30, s: 80, l: 40}}};

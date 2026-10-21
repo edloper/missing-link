@@ -218,6 +218,8 @@ class LevelEditor {
 	    }
 	});
 	document.addEventListener('keydown', event => {
+	    if (event.target.isContentEditable ||
+		['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) { return; }
 	    if ( (event.ctrlKey || event.metaKey) && event.key === 'z' ) {
 		this.undo();
 	    }

@@ -119,6 +119,8 @@ from a triangle touching a 2×2 canvas boundary.
 
 ### R14 — Medium: shortcuts conflict with browser/text editing
 
+**Fixed:** Handled game shortcuts prevent browser defaults; game/editor shortcuts leave input, textarea, select and editable text targets alone.
+
 `javascript/game.js:176`, `javascript/editor.js:220`
 
 The game's final `else { return; }` belongs to the separate Ctrl-Right check.

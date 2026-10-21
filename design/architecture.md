@@ -102,3 +102,4 @@ saving and `Game.resize()` all use it.
 - R11: Point inclusion rejects zero-area triangles; sampling them uses neutral gray. Circle proximity uses the nearest point on the finite segment, including endpoints and zero-length segments.
 - R12: Graph.loadFromJson calls its own addDot/addTri methods with the graph receiver when custom callbacks are omitted.
 - R13: Moving/resizing a dot retains its configured hit target radius multiplied by dotSize.
+- R14: Handled game shortcuts prevent browser defaults; game/editor shortcuts leave input, textarea, select and editable text targets alone.
