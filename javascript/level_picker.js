@@ -280,6 +280,7 @@ class LevelPicker {
 	}
 	this.savedData = {levels: levels};
 
+	this.setDefaults();
 	var prevLevelIsFinished = true;
 	for (let i = 0; i < this.levelUrls.length; i++) {
 	    const levelData = levels[this.levelUrls[i]];
@@ -290,8 +291,6 @@ class LevelPicker {
 		prevLevelIsFinished = levelData.progress?.finished ?? false;
 	    }
 	}
-	this.setDefaults();
-
 	if (fromCookies && Object.keys(levels).length > 0 && this.save()) {
 	    this.deleteOldCookies();
 	}

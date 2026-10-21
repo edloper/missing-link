@@ -9,22 +9,6 @@ function bug(id, name, fn) {
     test(`${id}: ${name}`, {todo: !process.env.MISSING_LINK_STRICT_BUGS}, fn);
 }
 
-bug('R4', 'a missing predecessor is treated as unfinished when recomputing locks', () => {
-    const api = load();
-    api.storage.set('MissingLink_progress', '{"levels":{"b":{"locked":true}}}');
-    const picker = makePicker(api);
-    picker.load();
-    assert.equal(picker.savedData.levels.b.locked, true);
-});
-
-bug('R4', 'a finished predecessor unlocks a newly added successor record', () => {
-    const api = load();
-    api.storage.set('MissingLink_progress', '{"levels":{"a":{"progress":{"finished":true}}}}');
-    const picker = makePicker(api);
-    picker.load();
-    assert.equal(picker.savedData.levels.b.locked, false);
-});
-
 bug('R5', 'zoom keeps the cursor anchored on the first zoom from 100 percent', () => {
     const api = load();
     const mouse = new api.MouseHandler({width: 600, height: 400, draw: drawing()});

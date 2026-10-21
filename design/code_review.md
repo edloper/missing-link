@@ -71,6 +71,8 @@ SVG objects in the browser.
 
 ### R4 — Medium: locks are reconstructed incorrectly for sparse progress
 
+**Fixed:** Progress defaults are populated before reconstructing locks, so missing predecessors stay unfinished and finished predecessors unlock new successor records.
+
 `javascript/level_picker.js:253`, `javascript/level_picker.js:219`
 
 `prevLevelIsFinished` updates only when a saved record exists, and defaults are

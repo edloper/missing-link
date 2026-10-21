@@ -46,3 +46,19 @@ test('R3: malformed progress edges are skipped without throwing', () => {
     assert.equal(game.graph.edges.length, 1);
 });
 
+test('R4: a missing predecessor is treated as unfinished when recomputing locks', () => {
+    const api = load();
+    api.storage.set('MissingLink_progress', '{"levels":{"b":{"locked":true}}}');
+    const picker = makePicker(api);
+    picker.load();
+    assert.equal(picker.savedData.levels.b.locked, true);
+});
+
+test('R4: a finished predecessor unlocks a newly added successor record', () => {
+    const api = load();
+    api.storage.set('MissingLink_progress', '{"levels":{"a":{"progress":{"finished":true}}}}');
+    const picker = makePicker(api);
+    picker.load();
+    assert.equal(picker.savedData.levels.b.locked, false);
+});
+
