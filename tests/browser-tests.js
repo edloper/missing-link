@@ -255,7 +255,16 @@ window.runTests = async function(group, report) {
 		backgroundColor: {h: 30, s: 80, l: 40}}};
 	    editor.loadFromJson(JSON.stringify(data));
 	    equal($('.cpHue').slider('value'), 30);
-	}, 'R16');
+	    equal($('.cpSat').slider('value'), 80);
+	    equal($('.cpLight').slider('value'), 40);
+	    const historySize = editor.history.length;
+	    $('.cpLight').slider('value', 41);
+	    equal(editor.backgroundColor, {h: 30, s: 80, l: 41});
+	    equal(editor.history.length, historySize + 1);
+	    editor.undo();
+	    equal(editor.backgroundColor, {h: 30, s: 80, l: 40});
+	    equal($('.cpLight').slider('value'), 40);
+	}); // R16 regression
 	test('file import decodes UTF-8 titles without corrupting Unicode', async () => {
 	    const data = {...TEST_LEVEL, extras: {...TEST_LEVEL.extras, title: '猫 — dance'}};
 	    const transfer = new DataTransfer();

@@ -208,7 +208,7 @@ class LevelEditor {
 		this.graph.dots.forEach(dot => dot.show());
 	    }
 	})
-	new ColorPicker($("#editorBackgroundColorPicker")[0], {
+	this.backgroundColorPicker = new ColorPicker($("#editorBackgroundColorPicker")[0], {
 	    change: (color) => {
 		this.history.push(new EditorHistoryEvent('setBackgroundColor', {
 		    old: this.backgroundColor,
@@ -422,7 +422,6 @@ class LevelEditor {
 	}
 	if (extras.backgroundColor) {
 	    this.setBackgroundColor(extras.backgroundColor);
-	    // TODO: Update the color picker
 	}
 	if (extras.title) {
 	    $("#editorTitle").val(extras.title);
@@ -745,6 +744,7 @@ class LevelEditor {
 	}
 	this.backgroundColor = hsl;
 	this.draw.css({background: "hsl("+hsl.h+","+hsl.s+"%,"+hsl.l+"%)"});
+	this.backgroundColorPicker?.setColor(hsl, false);
     }
 }
 

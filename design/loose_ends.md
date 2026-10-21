@@ -8,7 +8,6 @@ fixed.
 See `code_review.md` for reproduction details and repair status. Remaining
 reproduced issues:
 
-- R16: loaded background and color controls disagree.
 - R19: image failure can leave thumbnail export pending.
 - R20: JSON file import corrupts non-ASCII text.
 - R17: PNG string helper truncates embedded NULs.

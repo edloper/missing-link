@@ -104,3 +104,4 @@ saving and `Game.resize()` all use it.
 - R13: Moving/resizing a dot retains its configured hit target radius multiplied by dotSize.
 - R14: Handled game shortcuts prevent browser defaults; game/editor shortcuts leave input, textarea, select and editable text targets alone.
 - R15: Each graph scale/translation records original and destination coordinates so Undo restores the transform and preserves earlier undo actions.
+- R16: Level loads and background-color undo synchronize all picker sliders without generating extra history or recursive change callbacks.

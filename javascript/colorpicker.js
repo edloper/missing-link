@@ -27,6 +27,7 @@ class ColorPicker {
 	    orientation: "vertical",
 	    min: 0, max: 100, value: this.l,
 	    change: function(event, ui) {
+		if (thisColorPicker.settingColor) { return; }
 		thisColorPicker.l = ui.value;
 		thisColorPicker.update();
 	    }
@@ -35,6 +36,7 @@ class ColorPicker {
 	    orientation: "vertical",
 	    min: 0, max: 360, value: this.h,
 	    change: function(event, ui) {
+		if (thisColorPicker.settingColor) { return; }
 		thisColorPicker.h = ui.value;
 		thisColorPicker.update();
 	    }
@@ -43,6 +45,7 @@ class ColorPicker {
 	    orientation: "vertical",
 	    min: 0, max: 100, value: this.s,
 	    change: function(event, ui) {
+		if (thisColorPicker.settingColor) { return; }
 		thisColorPicker.s = ui.value;
 		thisColorPicker.update();
 	    }
@@ -50,20 +53,25 @@ class ColorPicker {
 	this.update();
     }
 
-    setColor(hsl) {
+    setColor(hsl, notify = true) {
 	this.h = hsl.h;
 	this.s = hsl.s;
 	this.l = hsl.l;
-	this.update();
+	this.settingColor = true;
+	this.$cpHue.slider('value', this.h);
+	this.$cpSat.slider('value', this.s);
+	this.$cpLight.slider('value', this.l);
+	this.settingColor = false;
+	this.update(notify);
     }
     
-    update() {
+    update(notify = true) {
 	const swatchColor = this.swatchColor();
 	this.$cpSwatch.css({"background-color": swatchColor});
 	this.$cpHue.css({"background-image": this.hueGradient()});
 	this.$cpSat.css({"background-image": this.satGradient()});
 	this.$cpLight.css({"background-image": this.lightGradient()});
-	this.callback({h: this.h, s: this.s, l: this.l});
+	if (notify) { this.callback({h: this.h, s: this.s, l: this.l}); }
 	this.$container.find(".ui-slider-handle").css({
 	    "background-color": swatchColor,
 	});

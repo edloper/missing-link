@@ -142,6 +142,8 @@ fixture, calls Undo, and observes the dots still transformed.
 
 ### R16 — Medium: loaded background and color controls disagree
 
+**Fixed:** Level loads and background-color undo synchronize all picker sliders without generating extra history or recursive change callbacks.
+
 `javascript/editor.js:406`, `javascript/colorpicker.js:53`
 
 Loading changes backgroundColor but leaves the picker at 180/50/90. Adjusting
