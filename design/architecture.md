@@ -32,6 +32,8 @@ regressions and repair status. Published levels and progress keys are unchanged.
   both the game and the editor.
 - `editor.js`: the level editor, including `ColorLookupCanvas`, which samples
   triangle colors from a background image.
+- `viewport.js`: `keepPageInPlace()`, used only by `game_fullscreen.html`
+  (see "Rotating an iPhone Home Screen app" below).
 - Smaller helpers: `toggle.js` (the Easy Mode switch), `colorpicker.js`,
   `confetti.js`, `splashscreen.js`, `svg_to_png.js`, `string_to_png.js`,
   `color.js`.
@@ -95,6 +97,28 @@ also accepts older zero-terminated PNG strings.
   opened from the Home Screen, which have their own separate storage. On
   iPhone and iPad, the level picker shows a dismissible tip about this; the
   hidden state is stored under `MissingLink_hideHomeScreenTip`.
+
+## Rotating an iPhone Home Screen app
+
+On an iPhone (seen on iOS 26 and 27), in a web app added to the Home Screen,
+turning the phone to landscape and back can leave the page shifted up by the
+status bar's height (59px on a Dynamic Island iPhone): the root and body boxes
+sit above 0 and `visualViewport.offsetTop` is 59, while `scrollY` may still be
+0. The page still paints in place, but taps are hit-tested against the shifted
+page and land about 59px low, so buttons stop answering. The same bug was
+fixed in another of the owner's games (Origami Blast) and in
+github.com/victronenergy/gui-v2/pull/3280.
+
+`game_fullscreen.html` never scrolls on purpose (`body {overflow: hidden;
+touch-action: none}`), so it calls `keepPageInPlace()` (`viewport.js`) once at
+startup. On `resize`, `orientationchange`, `screen.orientation` `change`,
+`visualViewport` `resize` and `scroll`, and the page becoming visible again, it
+checks at once, on the next frame, and after 150, 400 and 800ms. If the page is
+scrolled or its root/body box is above or left of 0 (or the visual viewport is
+offset at scale 1), it scrolls everything back to 0,0. It leaves the page alone
+while an on-screen keyboard is up or a text field has focus (the save code
+dialog). Don't add it to a page that scrolls, such as `index.html` or the
+editor: it would jump the player back to the top.
 
 ## Reviewed bug fixes
 

@@ -43,3 +43,9 @@ server also intermittently refuses bursts of script requests. See the review.
   license for to `backgrounds/`.
 - Not tested on a real phone since the October 2026 fixes: touch input, phone
   rotation, the Easy Mode switch, and the Home Screen tip.
+- The 2026-11-23 fix for taps missing after rotating an iPhone Home Screen app
+  (`javascript/viewport.js`, see `architecture.md`) is untested on a real
+  device; the automated check only fakes the shift. To confirm: add the game
+  to an iPhone's Home Screen, open a level, turn the phone portrait ->
+  landscape -> portrait, and check that the buttons (Back, Hint, Undo, Easy
+  Mode, and the level picker's buttons and thumbnails) still answer taps.

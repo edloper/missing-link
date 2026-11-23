@@ -115,7 +115,8 @@ The new checks exercise the actual fullscreen page: locked thumbnails, native
 tap events for Hint/Undo/Easy Mode/Back, partial progress across reload, save-code
 export/import through its dialog and confirmation, tip dismissal persistence,
 simulated Home Screen detection, viewport rotation preserving normalized dots
-and edges, and synthetic drag/pinch cancellation. Compatibility tests also run
+and edges, a page shifted during a rotation being put back (`viewport.js`), and
+synthetic drag/pinch cancellation. Compatibility tests also run
 the existing DOM/SVG/canvas/editor tests in WebKit.
 
 Windows WebKit's input coordinates require visual-viewport scaling on pages
@@ -130,7 +131,7 @@ and `test-results/` directories. Jekyll excludes these directories, test sources
 config, dependencies and npm manifests. No runtime dependency/build step is added.
 
 This was verified with Playwright 1.64.1 and its Windows WebKit 27.2 build.
-All 28 functional project/test combinations pass (seven checks per profile),
+All 32 functional project/test combinations pass (eight checks per profile),
 including all 39 existing browser regressions in each profile. The 83 Node tests
 still pass. The separate R25 desired-layout check fails on iPhone portrait
 (390px device, 980px layout), iPhone landscape (750px, 980px) and iPad portrait
@@ -138,6 +139,15 @@ still pass. The separate R25 desired-layout check fails on iPhone portrait
 while that issue remains open, rather than treating the shrunken layout as correct.
 
 The WebKit build is not branded Safari; platform-dependent behavior can differ.
+The iOS bug where a rotation leaves the page shifted (see `architecture.md`)
+can't happen in desktop WebKit, which hit-tests correctly. Its check fakes the
+shift: it scrolls a temporarily taller page by 59px, rotates and rotates back,
+and checks that the scroll and root box are back at 0 and each visible
+button's centre hits that button. WebKit reports that scroll as a
+`visualViewport` scroll, which `viewport.js` undoes at once, so an init script
+holds those events back until the rotation. With the fix disabled the check
+fails (scrollY stays about 59). Its button check passes either way here,
+because desktop WebKit paints and hit-tests the same shifted page.
 This Windows build reports navigator.maxTouchPoints as zero even in the touch
 profiles, so these runs exercise the iPhone/iPad UA branch of tip detection,
 not modern iPad Safari's desktop-UA/platform detection branch.

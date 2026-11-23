@@ -132,6 +132,73 @@ test('simulated Home Screen mode suppresses the Safari storage tip', async ({pag
     await expect(page.locator('.homeScreenTip')).toHaveCount(0);
 });
 
+// Desktop WebKit hit-tests correctly after a rotation, so the iOS Home Screen
+// bug (a page left shifted up by the status bar, making taps land low) cannot
+// happen here. Fake the shift instead: make the page scrollable, scroll it by
+// 59px, rotate and rotate back, then check that viewport.js put it back.
+// WebKit reports that scroll as a visualViewport scroll, which viewport.js
+// would undo at once; hold those events back until the rotation starts.
+// Call holdViewportScrolls before the page loads.
+async function holdViewportScrolls(page) {
+    await page.addInitScript(() => {
+	window.holdViewportScrolls = false;
+	window.visualViewport.addEventListener('scroll', event => {
+	    if (window.holdViewportScrolls) event.stopImmediatePropagation();
+	});
+    });
+}
+
+async function rotateWithStuckOffset(page) {
+    await page.evaluate(async () => {
+	const spacer = document.createElement('div');
+	spacer.id = 'testSpacer';
+	spacer.style.height = '3000px';
+	document.body.append(spacer);
+	window.holdViewportScrolls = true;
+	window.scrollTo(0, 59);
+	await new Promise(resolve => setTimeout(resolve, 200));
+    });
+    // Test setup: the page can be shifted.  (On a shrunken 980px layout,
+    // WebKit rounds the scroll to whole device pixels.)
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(50);
+    await page.evaluate(() => window.holdViewportScrolls = false);
+    const size = page.viewportSize();
+    await page.setViewportSize({width: size.height, height: size.width});
+    await page.waitForTimeout(300);
+    await page.setViewportSize(size);
+    await page.waitForTimeout(1000);
+    return page.evaluate(() => {
+	// Measured with the spacer still there: removing it would clamp the
+	// scroll to 0 by itself.
+	const result = {scrollY: window.scrollY,
+	    pageTop: Math.round(document.documentElement.getBoundingClientRect().top),
+	    buttons: 0, missed: []};
+	for (const button of document.querySelectorAll('button')) {
+	    const rect = button.getBoundingClientRect();
+	    if (!rect.width || !rect.height) continue;
+	    result.buttons++;
+	    const hit = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
+	    if (!button.contains(hit)) result.missed.push(button.id || button.textContent);
+	}
+	document.getElementById('testSpacer').remove();
+	return result;
+    });
+}
+
+test('a page shifted during a rotation is put back so buttons can be tapped', async ({page}) => {
+    await holdViewportScrolls(page);
+    await openPicker(page);
+    let after = await rotateWithStuckOffset(page);
+    expect(after).toEqual({scrollY: 0, pageTop: 0, buttons: after.buttons, missed: []});
+    expect(after.buttons).toBeGreaterThan(0);
+    await openFirstLevel(page);
+    after = await rotateWithStuckOffset(page);
+    expect(after).toEqual({scrollY: 0, pageTop: 0, buttons: after.buttons, missed: []});
+    expect(after.buttons).toBeGreaterThan(0);
+    await tap(page, page.locator('#gameHint'));
+    expect(await edgeCount(page)).toBe(1);
+});
+
 // R25 remains open: run explicitly with test:mobile:known. This is a desired
 // behavior assertion, not a test that codifies the current shrunken layout.
 test('@known R25 device page uses its CSS viewport without automatic shrinking', async ({page}, testInfo) => {

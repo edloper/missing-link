@@ -27,6 +27,7 @@
   <script src="javascript/colorpicker.js"></script>
   <script src="javascript/level_urls.js"></script>
   <script src="javascript/splashscreen.js"></script>
+  <script src="javascript/viewport.js"></script>
   <script>
     const MIN_WIDTH = 500;
     const MAX_WIDTH = Math.min(1000, window.innerHeight - 250);
@@ -47,6 +48,10 @@
     window.addEventListener('resize', () => {
 	game.resize(window.innerWidth, window.innerHeight);
     });
+
+    // iOS can leave the page shifted after a rotation, so taps miss the
+    // buttons (viewport.js).
+    keepPageInPlace();
   </script>
 
   <!-- Uncomment this to debug touch input:  
