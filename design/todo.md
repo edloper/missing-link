@@ -10,6 +10,14 @@ done. Last checked against the code on 2026-10-20.
   since the domain is already on Cloudflare. Players would get a sync code or
   a login.
 
+## Phones
+
+- Question for the owner (2026-11-25): bigger dots on phones? The board is
+  drawn as if 980px wide and shrunk to fit (`BOARD_WIDTH` in
+  `game_fullscreen.html`, see "Phones and tablets" in `architecture.md`), so
+  dots are as small as before the viewport fix and players pinch to zoom.
+  A smaller `BOARD_WIDTH` makes dots bigger, but dense levels may overlap.
+
 ## Editor
 
 - Finish touch-screen support (low priority). Basic touch input already works
