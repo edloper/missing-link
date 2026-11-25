@@ -74,3 +74,15 @@ function keepPageInPlace() {
 	if (document.visibilityState === 'visible') schedule();
     });
 }
+
+// The color of the current screen's background, for the parts of the screen
+// around the page: the browser's toolbars (theme-color), and in a Home Screen
+// app, the status bar and the strip at the top (#topEdge, see
+// game_fullscreen.html).  If missing, iOS 26 blurs the top of a Home Screen
+// app.
+function setScreenColor(color) {
+    if (!color) return;
+    document.documentElement.style.setProperty('--screen-color', color);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', color);
+}

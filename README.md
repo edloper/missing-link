@@ -48,9 +48,9 @@ npm run test:mobile
 ```
 
 It starts the local server as needed and tests iPhone/iPad in portrait and
-landscape. `npm run test:mobile:report` opens its HTML report. A separate
-`npm run test:mobile:known` command reproduces open layout issue R25 and may
-exit 1; it is excluded from the passing functional checks.
+landscape. `npm run test:mobile:report` opens its HTML report.
+
+`node scripts/make_icons.cjs` remakes the PNG icons from `images/icon.svg`.
 
 For an interactive device-sized WebKit window, start `python server.py 8001`
 and run `npm run mobile:iphone` or `npm run mobile:ipad` in another terminal.

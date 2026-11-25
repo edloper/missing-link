@@ -1,10 +1,18 @@
 const {test, expect, waitForPicker, openPicker, openFirstLevel, edgeCount,
     dispatchTouch, tap} = require('./helpers.cjs');
 
+// navigator.standalone is false in an iOS browser tab, true in a Home Screen
+// app, and missing elsewhere (including Playwright's WebKit).
+function fakeStandalone(page, value) {
+    return page.addInitScript(`Object.defineProperty(Navigator.prototype, 'standalone',
+	{get: () => ${value}, configurable: true});`);
+}
+
 test('touch picker enforces locks and remembers Home Screen tip dismissal', async ({page}) => {
+    await fakeStandalone(page, false);
     await openPicker(page);
     await expect(page.locator('.homeScreenTip')).toBeVisible();
-    await tap(page, page.locator('.closeTip'));
+    await tap(page, page.locator('.homeScreenTip button[data-hide=never]'));
     await expect(page.locator('.homeScreenTip')).toHaveCount(0);
     await page.reload();
     await waitForPicker(page);
@@ -71,8 +79,11 @@ test('rotation preserves normalized geometry and connected edges', async ({page}
     const before = await page.evaluate(() => JSON.parse(game.graph.saveToJson()));
     const size = page.viewportSize();
     await page.setViewportSize({width: size.height, height: size.width});
+    // game.width and game.height are in board units (Game.setSize).
     await expect.poll(() => page.evaluate(() =>
-	game.width === innerWidth && game.height === innerHeight)).toBe(true);
+	Math.abs(game.width * game.scale - innerWidth) < 0.01 &&
+	Math.abs(game.height * game.scale - innerHeight) < 0.01 &&
+	game.scale === Math.min(1, innerWidth / BOARD_WIDTH))).toBe(true);
     const after = await page.evaluate(() => JSON.parse(game.graph.saveToJson()));
     expect(after.tris).toEqual(before.tris);
     expect(after.dots).toHaveLength(before.dots.length);
@@ -199,17 +210,63 @@ test('a page shifted during a rotation is put back so buttons can be tapped', as
     expect(await edgeCount(page)).toBe(1);
 });
 
-// R25 remains open: run explicitly with test:mobile:known. This is a desired
-// behavior assertion, not a test that codifies the current shrunken layout.
-test('@known R25 device page uses its CSS viewport without automatic shrinking', async ({page}, testInfo) => {
+// R25 (fixed 2026-11-25): the page is laid out at the device's width, and
+// fits it on every screen.
+test('device page uses its CSS viewport and fits the screen', async ({page}, testInfo) => {
+    await fakeStandalone(page, false);
     await openPicker(page);
-    const viewport = await page.evaluate(() => ({width: innerWidth, height: innerHeight,
-	visualWidth: visualViewport.width, scale: visualViewport.scale,
-	userAgent: navigator.userAgent, touchPoints: navigator.maxTouchPoints}));
+    const picker = await page.evaluate(() => {
+	const grid = document.querySelector('.levelPickerGrid').getBoundingClientRect();
+	const buttons = [...document.querySelectorAll('.levelPickerButton, .homeScreenTip button')]
+	      .map(button => button.getBoundingClientRect().height);
+	return {width: innerWidth, scale: visualViewport.scale,
+	    scrollWidth: document.documentElement.scrollWidth,
+	    gridLeft: grid.left, gridRight: grid.right,
+	    tipFont: parseFloat(getComputedStyle(document.querySelector('.homeScreenTip')).fontSize),
+	    minButton: Math.min(...buttons)};
+    });
     await testInfo.attach('mobile-viewport', {
-	body: JSON.stringify({device: page.viewportSize(), actual: viewport}, null, 2),
+	body: JSON.stringify({device: page.viewportSize(), picker}, null, 2),
 	contentType: 'application/json',
     });
-    expect(viewport.width).toBeCloseTo(page.viewportSize().width, 0);
-    expect(viewport.scale).toBeCloseTo(1, 2);
+    expect(picker.width).toBe(page.viewportSize().width);
+    expect(picker.scale).toBeCloseTo(1, 2);
+    expect(picker.scrollWidth).toBeLessThanOrEqual(picker.width);
+    expect(picker.gridLeft).toBeGreaterThanOrEqual(0);
+    expect(picker.gridRight).toBeLessThanOrEqual(picker.width);
+    expect(picker.tipFont).toBeGreaterThanOrEqual(15);
+    if (testInfo.project.name.startsWith('iphone')) {
+	// Touch screens get finger-sized buttons (style.css, pointer: coarse).
+	expect(picker.minButton).toBeGreaterThanOrEqual(44);
+    }
+    await openFirstLevel(page);
+    const board = await page.evaluate(() => {
+	const svg = document.querySelector('svg.graph').getBoundingClientRect();
+	const hint = document.getElementById('gameHint').getBoundingClientRect();
+	return {svgWidth: svg.width, svgHeight: svg.height, boardWidth: game.width,
+	    hintBottom: hint.bottom, hintRight: hint.right};
+    });
+    // The board fills the screen, drawn in at least BOARD_WIDTH units.
+    expect(board.svgWidth).toBeCloseTo(picker.width, 0);
+    expect(board.boardWidth).toBeCloseTo(Math.max(picker.width, 980), 0);
+    expect(board.hintBottom).toBeLessThanOrEqual(page.viewportSize().height);
+    expect(board.hintRight).toBeLessThanOrEqual(picker.width);
+});
+
+test('Home Screen app: a strip at the top takes the color of each screen', async ({page}) => {
+    await fakeStandalone(page, true);
+    await openPicker(page);
+    const strip = () => page.evaluate(() => ({
+	height: document.getElementById('topEdge').getBoundingClientRect().height,
+	color: getComputedStyle(document.getElementById('topEdge')).backgroundColor,
+	theme: document.querySelector('meta[name=theme-color]').content}));
+    expect(await strip()).toEqual({height: 12, color: 'rgb(255, 255, 255)', theme: '#fff'});
+    await openFirstLevel(page);
+    const level = await strip();
+    expect(level.height).toBe(12);
+    expect(level.theme).toBe(await page.evaluate(() => game.backgroundCss));
+    expect(level.color).toBe(await page.evaluate(() =>
+	getComputedStyle(document.querySelector('svg.graph')).backgroundColor));
+    await tap(page, page.locator('.gameBackButton'));
+    expect((await strip()).theme).toBe('#fff');
 });

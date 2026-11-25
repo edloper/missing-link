@@ -386,22 +386,49 @@ window.runTests = async function(group, report) {
 	    equal(color, {h: 30, s: 80, l: 40});
 	    host.remove();
 	});
-	test('Home Screen tip appears for iOS, dismisses and remembers the choice', () => {
-	    const descriptor = Object.getOwnPropertyDescriptor(navigator, 'userAgent');
-	    Object.defineProperty(navigator, 'userAgent', {configurable: true, value: 'iPhone'});
+	test('Home Screen tip shows only in an iOS browser tab and remembers the choice', () => {
+	    const descriptor = Object.getOwnPropertyDescriptor(navigator, 'standalone');
+	    const setStandalone = value => Object.defineProperty(navigator, 'standalone',
+		{configurable: true, value});
 	    const picker = Object.create(LevelPicker.prototype);
 	    picker.$container = $(container);
+	    picker.savedData = {levels: {
+		a: {progress: {finished: true, percentDone: 100}},
+		b: {progress: {finished: false, percentDone: 40}},
+		c: {progress: {finished: false, percentDone: 0}},
+	    }};
 	    try {
+		setStandalone(undefined);  // Not an iPhone or iPad.
+		picker.addHomeScreenTip();
+		equal($('.homeScreenTip').length, 0);
+		setStandalone(true);  // Opened from the Home Screen.
+		picker.addHomeScreenTip();
+		equal($('.homeScreenTip').length, 0);
+		setStandalone(false);  // A browser tab on iOS.
 		picker.addHomeScreenTip();
 		equal($('.homeScreenTip').length, 1);
-		$('.closeTip').click();
+		equal($('.homeScreenTip .iosIcon svg').length, 3);
+		ok($('.homeScreenTip').text().includes('To bring your 1 finished level across'));
+		$('.homeScreenTip button[data-hide=later]').click();
 		equal($('.homeScreenTip').length, 0);
-		equal(localStorage.getItem(HIDE_HOME_SCREEN_TIP_KEY), '1');
+		ok(Date.now() - Number(localStorage.getItem(HIDE_HOME_SCREEN_TIP_KEY)) < 5000);
+		picker.addHomeScreenTip();
+		equal($('.homeScreenTip').length, 0);  // Snoozed.
+		localStorage.setItem(HIDE_HOME_SCREEN_TIP_KEY, String(Date.now() - 21 * 3600 * 1000));
+		picker.savedData = {levels: {}};
+		picker.addHomeScreenTip();
+		equal($('.homeScreenTip').length, 1);  // The snooze is over.
+		ok($('.homeScreenTip').text().includes('Switch before you start.'));
+		$('.homeScreenTip button[data-hide=never]').click();
+		equal(localStorage.getItem(HIDE_HOME_SCREEN_TIP_KEY), 'never');
+		picker.addHomeScreenTip();
+		equal($('.homeScreenTip').length, 0);
+		localStorage.setItem(HIDE_HOME_SCREEN_TIP_KEY, '1');  // The old tip's close button.
 		picker.addHomeScreenTip();
 		equal($('.homeScreenTip').length, 0);
 	    } finally {
-		if (descriptor) { Object.defineProperty(navigator, 'userAgent', descriptor); }
-		else { delete navigator.userAgent; }
+		if (descriptor) { Object.defineProperty(navigator, 'standalone', descriptor); }
+		else { delete navigator.standalone; }
 	    }
 	});
 	test('PNG string round trip preserves embedded NUL characters', async () => {

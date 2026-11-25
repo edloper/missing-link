@@ -100,10 +100,7 @@ The runner starts `python server.py 8001` if needed and otherwise reuses the
 local server. One worker avoids overwhelming its small connection backlog.
 
 - `npm run test:mobile`: functional mobile checks and all 39 browser regressions
-  in each device/orientation, excluding explicitly named `@known` issues.
-- `npm run test:mobile:known`: desired-behavior assertions for open R25 viewport
-  layout behavior; can exit 1. Artifacts go in `test-results/known/` without
-  replacing the passing suite's HTML report.
+  in each device/orientation.
 - `npm run test:mobile -- --project=iphone-portrait`: run one device profile.
 - `npm run test:mobile:headed -- --project=ipad-portrait`: watch automated checks.
 - `npm run test:mobile:report`: inspect the latest full-suite HTML report.
@@ -115,15 +112,16 @@ The new checks exercise the actual fullscreen page: locked thumbnails, native
 tap events for Hint/Undo/Easy Mode/Back, partial progress across reload, save-code
 export/import through its dialog and confirmation, tip dismissal persistence,
 simulated Home Screen detection, viewport rotation preserving normalized dots
-and edges, a page shifted during a rotation being put back (`viewport.js`), and
-synthetic drag/pinch cancellation. Compatibility tests also run
+and edges, a page shifted during a rotation being put back (`viewport.js`),
+synthetic drag/pinch cancellation, the page fitting each screen at its device
+width (picker grid, 44px buttons, tip text, board size), and the Home Screen
+app's top strip taking each screen's color. Compatibility tests also run
 the existing DOM/SVG/canvas/editor tests in WebKit.
 
-Windows WebKit's input coordinates require visual-viewport scaling on pages
-that shrink a default 980px layout. The test tap helper maps DOM positions to
-screen coordinates and uses `page.touchscreen.tap`; a check confirms that Hint
-receives trusted native events. It does not inject a viewport tag or change the
-page's CSS. Playwright's touchscreen API supports taps only, so drags and pinches
+The test tap helper maps DOM positions to screen coordinates (allowing for
+visual-viewport scaling, which pages without a viewport tag needed) and uses
+`page.touchscreen.tap`; a check confirms that Hint receives trusted native
+events. Playwright's touchscreen API supports taps only, so drags and pinches
 are explicitly labeled synthetic `TouchEvent` sequences. Page errors fail tests.
 
 Reports, screenshots and failure traces stay in ignored `playwright-report/`
@@ -131,12 +129,9 @@ and `test-results/` directories. Jekyll excludes these directories, test sources
 config, dependencies and npm manifests. No runtime dependency/build step is added.
 
 This was verified with Playwright 1.64.1 and its Windows WebKit 27.2 build.
-All 32 functional project/test combinations pass (eight checks per profile),
-including all 39 existing browser regressions in each profile. The 83 Node tests
-still pass. The separate R25 desired-layout check fails on iPhone portrait
-(390px device, 980px layout), iPhone landscape (750px, 980px) and iPad portrait
-(810px, 980px); it passes on iPad landscape (1080px). It deliberately exits 1
-while that issue remains open, rather than treating the shrunken layout as correct.
+On 2026-11-25 (after the viewport fix) all 40 project/test combinations pass
+(ten checks per profile), including all 39 browser regressions in each
+profile, and the 84 Node tests pass.
 
 The WebKit build is not branded Safari; platform-dependent behavior can differ.
 The iOS bug where a rotation leaves the page shifted (see `architecture.md`)
@@ -148,12 +143,12 @@ button's centre hits that button. WebKit reports that scroll as a
 holds those events back until the rotation. With the fix disabled the check
 fails (scrollY stays about 59). Its button check passes either way here,
 because desktop WebKit paints and hit-tests the same shifted page.
-This Windows build reports navigator.maxTouchPoints as zero even in the touch
-profiles, so these runs exercise the iPhone/iPad UA branch of tip detection,
-not modern iPad Safari's desktop-UA/platform detection branch.
+Playwright's WebKit has no `navigator.standalone`, which the tip uses to
+detect an iOS browser tab, so the tests set it with an init script (false for a
+tab, true for a Home Screen app).
 Resizing the viewport does not model Safari's collapsing toolbar, OS orientation
 events, keyboard, safe-area hardware, true multi-finger input or storage eviction.
-The Home Screen flag is injected for that one test, not an installed PWA.
+The Home Screen flag is injected, not an installed PWA.
 Those behaviors still need Apple Simulator or real-device testing. See the
 [Playwright emulation docs](https://playwright.dev/docs/emulation),
 [touch limitations](https://playwright.dev/docs/api/class-touchscreen) and

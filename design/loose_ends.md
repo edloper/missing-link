@@ -8,17 +8,8 @@ fixed.
 See `code_review.md` for completed repairs. Open inspection/data findings:
 R22 published level coordinates; R23
 load/storage error UX; R24 timer/listener/gesture cleanup; R25 accessibility
-and mobile layout; R26 metadata/history consistency and code cleanup. The local
+(its mobile layout part was fixed on 2026-11-25); R26 metadata/history consistency and code cleanup. The local
 server also intermittently refuses bursts of script requests. See the review.
-
-### Mobile checks (2026-10-20)
-
-- R25 now has an executable viewport reproduction in
-  `tests/mobile/game.spec.cjs` (`npm run test:mobile:known`). Without a viewport
-  meta tag, WebKit renders the iPhone portrait/landscape and iPad portrait page
-  at 980 CSS pixels and shrinks it to the device width. The iPad landscape
-  profile fits at its 1080px width. Functional checks account for input-coordinate scaling;
-  production layout has not been changed. See `testing.md` for limits.
 
 ## Earlier findings
 
@@ -42,7 +33,25 @@ server also intermittently refuses bursts of script requests. See the review.
   recolor triangles. To change that, add images the owner made or has a
   license for to `backgrounds/`.
 - Not tested on a real phone since the October 2026 fixes: touch input, phone
-  rotation, the Easy Mode switch, and the Home Screen tip.
+  rotation, and the Easy Mode switch.
+- The 2026-11-25 iPhone/iPad changes (see "Phones and tablets" in
+  `architecture.md`) were checked only in Playwright's WebKit with iPhone and
+  iPad profiles. To check on a real iPhone and iPad:
+  - In Safari: the level picker, buttons and the Home Screen tip are at normal
+    size; the tip's wording and icons match what Share shows on that iOS
+    version; "Not now" and "Don't show again" work; the board's dots look as
+    before, and dragging, panning and pinching still work.
+  - The level picker scrolls (in landscape, to reach the tip) although the
+    page itself doesn't, and a double tap doesn't zoom the page.
+  - The save code dialog: tapping a code field doesn't zoom the page, the code
+    can still be selected and copied, and the page is back in place after the
+    keyboard closes.
+  - Delete the old Home Screen icon (save a code first: this deletes its
+    progress) and add the game again from `index.html`: it should open the
+    game, with the new icon, and no blur at the top of the level picker or of
+    a level (the status bar takes the screen's color). Rotate on both screens.
+  - On a phone with a notch, in landscape: the back button, Undo, Hint and
+    Easy Mode stay clear of the notch and home bar.
 - The 2026-11-23 fix for taps missing after rotating an iPhone Home Screen app
   (`javascript/viewport.js`, see `architecture.md`) is untested on a real
   device; the automated check only fakes the shift. To confirm: add the game

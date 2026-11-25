@@ -61,6 +61,22 @@ test('pan clamps to the zoomed canvas bounds', () => {
     assert.deepEqual(plain(mouse.viewOffset), {x: 0, y: 0});
 });
 
+test('on a shrunken board, panning follows the finger and the drag threshold is in screen pixels', () => {
+    // A board drawn at half size (Game.setSize) and zoomed in 2x: 1 CSS
+    // pixel is 1 board unit.
+    const f = fixture();
+    f.game.scale = 0.5;
+    f.game.draw.point = (x, y) => ({x: x + 100, y: y + 100});
+    f.mouse.zoomLevel = 2;
+    f.mouse.viewOffset = {x: 100, y: 100};
+    f.mouse.mouseDown(event(50, 50));
+    f.mouse.mouseMove(event(45, 50));  // 5 pixels: still a click.
+    assert.equal(f.mouse.state, f.mouse.CLICKING);
+    f.mouse.mouseMove(event(20, 30));  // 30 and 20 pixels at 1 unit per pixel.
+    assert.equal(f.mouse.state, f.mouse.DRAGGING);
+    assert.deepEqual(plain(f.mouse.viewOffset), {x: 130, y: 120});
+});
+
 test('zoom is bounded between one and twenty', () => {
     const {mouse, game} = fixture();
     mouse.zoomViewport({x: 0, y: 0}, 100);

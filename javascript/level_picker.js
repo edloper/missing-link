@@ -9,7 +9,18 @@
   */
 
 const PROGRESS_STORAGE_KEY = "MissingLink_progress";
+// "never" after "Don't show again" (or "1", from the old tip's close
+// button), or the time of the last "Not now".
 const HIDE_HOME_SCREEN_TIP_KEY = "MissingLink_hideHomeScreenTip";
+const HOME_SCREEN_TIP_SNOOZE_MS = 20 * 3600 * 1000;
+
+// iOS's own icons for Share, Add to Home Screen and View More (as in iOS 26),
+// drawn to follow the text color.
+const IOS_ICONS = {
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 9.5H6.5v11.5h11V9.5h-2"/><path d="M12 14.5V2.5M8.5 6 12 2.5 15.5 6"/></svg>',
+    add: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M12 8v8M8 12h8"/></svg>',
+    more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="11" fill="#d9dcdc" stroke="none"/><path d="M7 10l5 5 5-5"/></svg>',
+};
 
 function isProgressObject(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -103,6 +114,9 @@ class LevelPicker {
 	this.draw = SVG();
 	this.titles = [];
 	this.$grid.width(this.numColumns * 120);
+	window.addEventListener('resize', () => this.fitGrid());
+	// The title image's height moves the grid.
+	window.addEventListener('load', () => this.fitGrid());
 	this.urlToThumbnail = {};
 	
 	for (let i = 0; i < levelUrls.length; i += this.numColumns) {
@@ -133,11 +147,12 @@ class LevelPicker {
 	this.$resetButton = $("<button class='levelPickerButton'>Reset Progress</button>");
 	this.$buttons.append(this.$resetButton)
 	this.addHomeScreenTip();
+	this.fitGrid();
 	this.$resetButton.click(() => {
 	    this.$resetConfirm.dialog({
 		resizable: false,
 		height: "auto",
-		width: 400,
+		width: Math.min(400, window.innerWidth - 20),
 		modal: true,
 		buttons: {
 		    "Reset": () => {
@@ -152,29 +167,62 @@ class LevelPicker {
 	});
     }
 
-    // On iPhone and iPad, Safari deletes a site's saved data if the site isn't
-    // used for 7 days, but not for sites added to the Home Screen.  Suggest
-    // that (unless we're already running from the Home Screen).
+    // On iPhone and iPad, in a browser tab, suggest adding the game to the
+    // Home Screen: Safari deletes a site's saved data if the site isn't used
+    // for 7 days, but not for sites opened from the Home Screen.  The Home
+    // Screen game has its own, separate storage, so explain how to bring
+    // progress across with a save code.
     addHomeScreenTip() {
-	const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
-		       (navigator.platform == "MacIntel" && navigator.maxTouchPoints > 1));
-	const isStandalone = (navigator.standalone === true ||
-			      window.matchMedia("(display-mode: standalone)").matches);
-	if (!isIOS || isStandalone ||
-	    localStorage.getItem(HIDE_HOME_SCREEN_TIP_KEY)) {
+	// navigator.standalone exists only on iPhone and iPad: false in a
+	// browser tab, true when opened from the Home Screen.
+	if (navigator.standalone !== false) {
 	    return;
 	}
+	try {
+	    const hidden = localStorage.getItem(HIDE_HOME_SCREEN_TIP_KEY);
+	    if (hidden && (isNaN(Number(hidden)) || hidden === "1" ||
+			   Date.now() - Number(hidden) < HOME_SCREEN_TIP_SNOOZE_MS)) {
+		return;
+	    }
+	} catch (e) {}  // Storage blocked: show the tip.
+	const levels = Object.values(this.savedData?.levels ?? {});
+	const finished = levels.filter(data => data.progress?.finished).length;
+	const started = levels.filter(data => data.progress?.percentDone > 0).length;
+	const icon = name => "<span class='iosIcon' aria-hidden='true'>" + IOS_ICONS[name] + "</span>";
+	let moveAcross;
+	if (started == 0) {
+	    moveAcross = "Switch before you start.";
+	} else {
+	    const what = (finished == 0) ? "progress" :
+		  (finished == 1) ? "1 finished level" : finished + " finished levels";
+	    moveAcross = "To bring your " + what + " across, tap <b>Save Code</b> " +
+		"here and <b>Copy Code</b>, then in the Home Screen game tap " +
+		"<b>Save Code</b>, paste the code and tap <b>Load Code</b>.";
+	}
 	const $tip = $(
-	    "<div class='homeScreenTip'>" +
-	    "<button class='closeTip' title='Hide this tip'>&times;</button>" +
-	    "<b>Tip:</b> Safari may erase your progress if you don't play for a " +
-	    "week.  To keep it, tap Share, then \"Add to Home Screen\", and play " +
-	    "from the Home Screen.  (The Home Screen game starts fresh: use " +
-	    "Save Code to bring your progress with you.)" +
-	    "</div>");
-	$tip.find(".closeTip").click(() => {
+	    "<div class='homeScreenTip' role='note'>" +
+	    "<p class='tipTitle'>Add Missing Link to the Home Screen</p>" +
+	    "<p><b>Why:</b> in a browser tab, your progress can be lost. The " +
+	    "browser may clear a site's saved data when it hasn't been opened " +
+	    "for a while (about a week in Safari), or when someone clears the " +
+	    "browser's history. From the Home Screen your progress is kept, " +
+	    "and the game fills the screen.</p>" +
+	    "<p><b>How:</b> tap <b>Share</b> " + icon("share") + ", then " +
+	    "<b>Add to Home Screen</b> " + icon("add") + ". If it isn't in the " +
+	    "list, it may be under <b>View More</b> " + icon("more") + ". Then " +
+	    "open Missing Link from its new icon.</p>" +
+	    "<p class='tipWarning'><b>Note:</b> the Home Screen game keeps its " +
+	    "own progress and starts with only the first level open. " +
+	    moveAcross + "</p>" +
+	    "<div class='tipButtons'>" +
+	    "<button type='button' data-hide='never'>Don't show again</button>" +
+	    "<button type='button' data-hide='later'>Not now</button>" +
+	    "</div></div>");
+	$tip.find("button").click(event => {
+	    const hide = $(event.currentTarget).data("hide");
 	    try {
-		localStorage.setItem(HIDE_HOME_SCREEN_TIP_KEY, "1");
+		localStorage.setItem(HIDE_HOME_SCREEN_TIP_KEY,
+				     hide == "never" ? "never" : String(Date.now()));
 	    } catch (e) {}
 	    $tip.remove();
 	});
@@ -363,10 +411,32 @@ class LevelPicker {
 
     hide() {
 	this.$container.hide();
+	setScreenColorIfAvailable(this.game?.backgroundCss);
     }
 
     show() {
 	this.$container.show();
+	setScreenColorIfAvailable("#fff");
+	this.fitGrid();
+    }
+
+    // Shrink the grid of levels on a small screen, so that it fits across,
+    // and (down to half size) so that the title, the grid and the buttons
+    // fit on the screen without scrolling.
+    fitGrid() {
+	if (!this.$grid || !this.$container.is(":visible")) {
+	    return;
+	}
+	const grid = this.$grid[0];
+	grid.style.zoom = 1;
+	const width = grid.offsetWidth;
+	const height = grid.offsetHeight;
+	const container = this.$container[0];
+	const top = grid.getBoundingClientRect().top - container.getBoundingClientRect().top;
+	const below = this.$buttons.outerHeight(true) + 10;
+	const zoom = Math.min(1, (container.clientWidth - 16) / width,
+			      Math.max(0.5, (container.clientHeight - top - below) / height));
+	grid.style.zoom = zoom;
     }
     
     addThumbnail(url, row, col) {
@@ -465,5 +535,12 @@ class LevelPicker {
 	    }
 	}
 	// Also update locks.
+    }
+}
+
+// The page's color behind the current screen (viewport.js), if the page has it.
+function setScreenColorIfAvailable(color) {
+    if (typeof setScreenColor === "function") {
+	setScreenColor(color);
     }
 }

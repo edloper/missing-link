@@ -41,19 +41,21 @@ class GameHistoryEvent {
 }
 
 class Game {
-    constructor(container, width, height) {
+    // `width` and `height` are the board's size on screen, in CSS pixels.
+    // `scale` (at most 1) shrinks the board on small screens; see setSize().
+    constructor(container, width, height, scale = 1) {
 	this.container = container
 	this.$container = $(container)
 	this.$container.append($("<div class='levelTitle'></div>"));
 	this.$title = this.$container.find(".levelTitle");
-	this.width = width  // used by mouse_controller.
-	this.height = height  // used by mouse_controller.
-	this.draw = SVG().addTo(container).size(width, height);
+	this.draw = SVG().addTo(container);
+	this.setSize(width, height, scale);
 	$(container).addClass('missingLinkGame');
 	this.setBackgroundColor({h: 0, s: 0, l: 80});
 	this.draw.node.classList.add("graph");
 	this.graph = new Graph(this.draw);
 	this.mouseHandler = new MouseHandler(this);
+	this.mouseHandler.updateViewbox();
 	this.graph.setAlpha(1);
 	this.easyMode = false;
 	this.addControls();
@@ -142,7 +144,7 @@ class Game {
     addControls() {
 	const $controls = $(GAME_CONTROLS_HTML);
 	this.$container.append($controls);
-	this.$container.find(".controls").css({width: this.width});
+	this.$container.find(".controls").css({width: this.width * this.scale});
 	$("#gameLoad").change(() => {
 	    const file = $("#gameLoad")[0].files[0];
 	    const reader = new FileReader();
@@ -215,20 +217,32 @@ class Game {
 	window.history.pushState({}, ''); 	
     }
 
-    resize(width, height) {
+    // The board is drawn in board units: the svg's width and height
+    // attributes and its viewBox are in board units, and its CSS size is the
+    // size on screen.  On a small screen, `scale` (CSS pixels per board unit,
+    // at most 1) shrinks the board, so a level keeps the dot sizes and line
+    // widths it was made for, while the buttons and text keep their normal
+    // size.  `this.width` and `this.height` are in board units.
+    setSize(width, height, scale = 1) {
+	this.scale = scale;
+	this.width = width / scale;  // used by mouse_controller.
+	this.height = height / scale;  // used by mouse_controller.
+	this.draw.size(this.width, this.height);
+	this.draw.css({width: width + 'px', height: height + 'px'});
+	this.$container.find(".controls").css({width: width});
+    }
+
+    resize(width, height, scale = this.scale) {
 	this.cancelDrag();
 	const oldTransform = this.graph.levelTransform(this.graph.levelPadding);
-	this.width = width;  // used by mouse_controller.
-	this.height = height;  // used by mouse_controller.
-	this.$container.find(".controls").css({width: width});
-	this.draw.size(width, height);
+	this.setSize(width, height, scale);
 
 	// Move the dots so the level stays centered and fits the new size.
 	const newTransform = this.graph.levelTransform(this.graph.levelPadding);
-	const scale = newTransform.scale / oldTransform.scale;
+	const ratio = newTransform.scale / oldTransform.scale;
 	for (const dot of this.graph.dots) {
-	    dot.move((dot.x - oldTransform.dx) * scale + newTransform.dx,
-		     (dot.y - oldTransform.dy) * scale + newTransform.dy);
+	    dot.move((dot.x - oldTransform.dx) * ratio + newTransform.dx,
+		     (dot.y - oldTransform.dy) * ratio + newTransform.dy);
 	}
 	for (const edge of this.graph.edges) {
 	    if (edge.end) {
@@ -545,7 +559,8 @@ class Game {
 	    return;
 	}
 	this.backgroundColor = hsl;
-	this.draw.css({background: "hsl("+hsl.h+","+hsl.s+"%,"+hsl.l+"%)"});
+	this.backgroundCss = "hsl("+hsl.h+","+hsl.s+"%,"+hsl.l+"%)";
+	this.draw.css({background: this.backgroundCss});
     }
 
     levelComplete() {

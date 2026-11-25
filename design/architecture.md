@@ -12,7 +12,7 @@ regressions and repair status. Published levels and progress keys are unchanged.
 ## Pages
 
 - `index.html`: title page, linking to the game and the editor.
-- `game_fullscreen.html`: the game.
+- `game_fullscreen.html`: the game (see "Phones and tablets" below).
 - `game.html`: an older, non-fullscreen version of the game. It still works
   but nothing links to it.
 - `editor.html`: the level editor (desktop only).
@@ -32,8 +32,9 @@ regressions and repair status. Published levels and progress keys are unchanged.
   both the game and the editor.
 - `editor.js`: the level editor, including `ColorLookupCanvas`, which samples
   triangle colors from a background image.
-- `viewport.js`: `keepPageInPlace()`, used only by `game_fullscreen.html`
-  (see "Rotating an iPhone Home Screen app" below).
+- `viewport.js`: `keepPageInPlace()` and `setScreenColor()`, used only by
+  `game_fullscreen.html` (see "Phones and tablets" and "Rotating an iPhone
+  Home Screen app" below).
 - Smaller helpers: `toggle.js` (the Easy Mode switch), `colorpicker.js`,
   `confetti.js`, `splashscreen.js`, `svg_to_png.js`, `string_to_png.js`,
   `color.js`.
@@ -94,9 +95,68 @@ also accepts older zero-terminated PNG strings.
   deflate-compressed and base64-encoded (`ML0-` means not compressed, for
   browsers without `CompressionStream`).
 - Safari deletes a site's data after 7 days without a visit, except for sites
-  opened from the Home Screen, which have their own separate storage. On
-  iPhone and iPad, the level picker shows a dismissible tip about this; the
-  hidden state is stored under `MissingLink_hideHomeScreenTip`.
+  opened from the Home Screen, which have their own separate storage. See
+  "The Home Screen tip" below.
+
+## Phones and tablets
+
+`game_fullscreen.html` and `index.html` have a `width=device-width` viewport
+tag (added 2026-11-25; before that, iPhones laid the game out 980px wide and
+shrank it to about 40%, so buttons and text were tiny: review item R25).
+
+- The board keeps the look the levels were made for. `Game.setSize()` draws
+  the svg in board units: its width/height attributes and viewBox are the
+  screen size divided by `scale`, and its CSS size is the screen size.
+  `game_fullscreen.html` passes `scale = min(1, innerWidth / 980)`
+  (`BOARD_WIDTH`), so on a phone the dots, numbers and lines are the same size
+  on screen as before the viewport tag, while the buttons and title are at
+  normal size. `game.width`/`game.height` are in board units; the mouse
+  handler converts screen pixels with `unitsPerPixel()` (panning, drag
+  threshold). Desktop windows 980px or wider use scale 1, as before; narrower
+  desktop windows now shrink the board too. The editor doesn't use this.
+- The page never scrolls (`body {overflow: hidden; touch-action: none}`); the
+  level picker is a full-screen box that scrolls inside itself
+  (`touch-action: pan-y`). `LevelPicker.fitGrid()` shrinks the grid of levels
+  with CSS `zoom` so that it fits across the screen and, down to half size,
+  so that the title, grid and buttons fit without scrolling.
+- Buttons and the back button stay clear of the notch and home bar
+  (`env(safe-area-inset-*)`, with `viewport-fit=cover`). On touch screens the
+  picker's buttons are 44px tall, and the save code fields use 16px text so
+  iOS doesn't zoom in on them (`style.css`, `pointer: coarse`). Text outside
+  the save code fields can't be selected, and long presses don't open the
+  callout menu.
+- Installing: `manifest.webmanifest` (scope `/`, `start_url`
+  `/game_fullscreen.html`, so the app opens the game even when added from the
+  title page) and the Apple meta tags. The icons (`images/icon-*.png`) are made
+  from `images/icon.svg` (a redrawing of `icon_blue.png`) by
+  `scripts/make_icons.cjs`. An installed Home Screen icon keeps the icon,
+  start page and status bar style it was added with: to see changes, delete it
+  and add it again (which deletes its progress: save a code first).
+- The status bar style is `default`, not `black-translucent`: on iOS 26 a
+  translucent bar blurs the page under it. Even so, iOS 26 blurs the top of a
+  Home Screen app unless an opaque `position: fixed` box covers the top edge,
+  and colors the status bar from it. So in a Home Screen app
+  (`html.standalone`), `#topEdge` is a 12px fixed strip at the top, in the
+  color of the current screen: white for the level picker, the level's
+  background in a level. `setScreenColor()` sets it (with the html background
+  and `theme-color`); `LevelPicker.show()`/`hide()` call it. It sits under
+  jQuery UI's dialog backdrop so it dims with the page.
+- No service worker, sound, printing or downloads in the game, so those iOS
+  issues don't apply. Progress asks for persistent storage after the first
+  finished level (see "Saved progress").
+
+## The Home Screen tip
+
+On an iPhone or iPad in a browser tab (`navigator.standalone === false`), the
+level picker shows a tip under its buttons (`addHomeScreenTip()`): why (the
+browser may clear saved progress), how (Share, Add to Home Screen, maybe under
+View More, with iOS's icons drawn inline, copied from Origami Blast), and that
+the Home Screen game has its own progress, with how to bring it across with a
+save code (or "Switch before you start" with no progress yet). "Not now" hides
+it for 20 hours, "Don't show again" for good; `MissingLink_hideHomeScreenTip`
+holds `never` (or `1` from the older tip's close button) or the time of "Not
+now". The owner chose a tip under the buttons rather than a popup, and this
+wording (2026-11-25).
 
 ## Rotating an iPhone Home Screen app
 

@@ -5,9 +5,8 @@
     "test": "node --test tests/*.test.cjs",
     "test:bugs": "node --test tests/review-regressions.test.cjs",
     "test:known": "node --test tests/review-regressions.test.cjs",
-    "test:mobile": "playwright test --grep-invert @known",
-    "test:mobile:known": "playwright test --grep @known --output=test-results/known --reporter=list",
-    "test:mobile:headed": "playwright test --grep-invert @known --headed",
+    "test:mobile": "playwright test",
+    "test:mobile:headed": "playwright test --headed",
     "test:mobile:report": "playwright show-report",
     "mobile:iphone": "playwright open --browser=webkit --device=\"iPhone 13\" http://127.0.0.1:8001/game_fullscreen.html",
     "mobile:ipad": "playwright open --browser=webkit --device=\"iPad (gen 7)\" http://127.0.0.1:8001/game_fullscreen.html"

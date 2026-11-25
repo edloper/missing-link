@@ -148,8 +148,8 @@ class MouseHandler {
 	if (this.state != this.DRAGGING) {
 	    const now = performance.now();
 	    if (((now - this.clickStartTime) < DRAG_MIN_TIME) &&
-		(Math.abs(this.clickPoint.x - point.x) < DRAG_MIN_PIXELS / this.zoomLevel) &&
-		(Math.abs(this.clickPoint.y - point.y) < DRAG_MIN_PIXELS / this.zoomLevel)) {
+		(Math.abs(this.clickPoint.x - point.x) < DRAG_MIN_PIXELS * this.unitsPerPixel()) &&
+		(Math.abs(this.clickPoint.y - point.y) < DRAG_MIN_PIXELS * this.unitsPerPixel())) {
 		return;  // Minimum threshold for "dragging"
 	    }
 	    if (button == 0) {
@@ -163,8 +163,8 @@ class MouseHandler {
 	    this.game.dragDot(this.clickObj, x, y);
 	} else {
 	    // Drag the canvas.
-	    var dx = (x - this.clickPos.x) / this.zoomLevel;
-	    var dy = (y - this.clickPos.y) / this.zoomLevel;
+	    var dx = (x - this.clickPos.x) * this.unitsPerPixel();
+	    var dy = (y - this.clickPos.y) * this.unitsPerPixel();
 	    this.moveViewport(dx, dy, this.clickViewOffset)
 	}
     }
@@ -204,6 +204,12 @@ class MouseHandler {
 	}
 	this.clickObj = null;
 	this.state = null;
+    }
+
+    // Board units per CSS pixel on screen.  The game shrinks its board on
+    // small screens (Game.setSize); the editor doesn't.
+    unitsPerPixel() {
+	return 1 / ((this.game.scale ?? 1) * this.zoomLevel);
     }
 
     zoomOut() {
